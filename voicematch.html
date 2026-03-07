@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOICE MATCH</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
+  --red:#e5001a;--red2:#ff2233;--red3:#8b0010;
+  --green:#00e56b;--green2:#00ff77;
+  --amber:#ffaa00;--amber2:#ffcc44;
+  --blue:#0088ff;--text:#e8e8e8;--dim:#666;--border:#2a2a2a;
+  --gr:0 0 12px #e5001a88;--gg:0 0 12px #00e56b88;
+  --ga:0 0 12px #ffaa0088;--gb:0 0 12px #0088ff88;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden}
+
+/* scanlines */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
+
+.app{max-width:860px;margin:0 auto;padding:0 16px 70px;position:relative;z-index:1}
+
+/* ── LOGO ── */
+.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,9vw,80px);
+  letter-spacing:6px;text-align:center;padding:22px 0 2px;line-height:1;
+  background:linear-gradient(135deg,var(--red),var(--amber),var(--red2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:8px;
+  color:var(--dim);text-align:center;text-transform:uppercase;margin-bottom:20px}
+
+/* ON AIR badge */
+.on-air{display:inline-flex;align-items:center;gap:7px;background:#1a0000;
+  border:1px solid var(--red);border-radius:2px;padding:4px 12px;
+  font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--red);
+  box-shadow:var(--gr);animation:airpulse 1.2s infinite}
+.on-air::before{content:'';width:8px;height:8px;border-radius:50%;
+  background:var(--red);box-shadow:var(--gr);animation:blink 1.2s infinite}
+@keyframes airpulse{0%,100%{box-shadow:var(--gr)}50%{box-shadow:0 0 20px #e5001a88}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── SCREENS ── */
+.screen{display:none}.screen.on{display:block;animation:fadeUp .22s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── PANELS ── */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:3px;
+  padding:20px;margin:12px 0;position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:.6}
+.panel.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.panel.amber::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.panel.blue::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.ptitle{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;
+  color:var(--red);margin-bottom:14px;text-transform:uppercase}
+.ptitle.g{color:var(--green)}.ptitle.a{color:var(--amber)}.ptitle.b{color:var(--blue)}
+
+/* ── INPUTS ── */
+input[type=text],input[type=number],select{background:#0d0d0d;border:1px solid var(--border);
+  border-radius:2px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px;
+  padding:10px 12px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{border-color:var(--red);box-shadow:var(--gr)}
+input::placeholder{color:#333}
+label{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;
+  color:var(--dim);text-transform:uppercase;display:block;margin-bottom:5px}
+select{cursor:pointer}select option{background:#0d0d0d}
+
+/* ── BUTTONS ── */
+.btn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;padding:12px 22px;
+  border:1px solid;border-radius:2px;cursor:pointer;transition:all .14s;background:transparent}
+.btn:active{transform:scale(.97)}.btn:hover{opacity:.85}.btn:disabled{opacity:.3;cursor:not-allowed}
+.br{color:var(--red);border-color:var(--red);box-shadow:var(--gr)}
+.br:hover{background:#1a0000}
+.bg{color:var(--green);border-color:var(--green);box-shadow:var(--gg)}
+.bg:hover{background:#001a0d}
+.ba{color:var(--amber);border-color:var(--amber);box-shadow:var(--ga)}
+.ba:hover{background:#1a1000}
+.bb{color:var(--blue);border-color:var(--blue);box-shadow:var(--gb)}
+.bsolid-r{background:var(--red);border-color:var(--red3);color:#fff;box-shadow:var(--gr)}
+.bsolid-g{background:var(--green);border-color:#00a04a;color:#000;box-shadow:var(--gg)}
+.bsolid-a{background:var(--amber);border-color:#cc8800;color:#000;box-shadow:var(--ga)}
+.bblock{display:block;width:100%;text-align:center;margin:8px 0;font-size:16px;padding:15px}
+.bsm{font-size:12px;padding:8px 16px}
+
+/* ── LAYOUT ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row{display:flex;gap:10px;align-items:center}
+.tc{text-align:center}.mt{margin-top:12px}.mt2{margin-top:20px}
+hr{border:none;border-top:1px solid var(--border);margin:14px 0}
+.hint{font-size:11px;color:var(--dim);margin-top:4px}
+.empty{text-align:center;padding:22px;color:#333;font-family:'Barlow Condensed';
+  font-size:13px;letter-spacing:3px;border:1px dashed var(--border);border-radius:2px}
+
+/* ── VU METER ── */
+.vu-wrap{display:flex;gap:3px;align-items:flex-end;height:40px;justify-content:center;margin:10px 0}
+.vu-bar{width:6px;border-radius:1px;background:var(--green);transition:height .08s;min-height:2px}
+.vu-bar:nth-child(3n){background:var(--amber)}
+.vu-bar:nth-child(5n){background:var(--red)}
+.vu-wrap.idle .vu-bar{height:3px;background:var(--border)}
+
+/* ── WAVEFORM CANVAS ── */
+.waveform-canvas{width:100%;height:48px;border-radius:2px;display:block;background:transparent}
+.waveform-wrap{margin:8px 0;position:relative;height:48px;background:#0d0d0d;border-radius:2px;overflow:hidden}
+.waveform-wrap .wf-playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--red);pointer-events:none;transition:left .1s linear}
+
+/* ── PLAYER CHIP ── */
+.pchip{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:2px;margin:6px 0;animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(-10px);opacity:0}to{transform:none;opacity:1}}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:14px;flex-shrink:0}
+.pname{flex:1;font-size:14px}.rm{background:none;border:none;color:#333;cursor:pointer;
+  font-size:16px;padding:2px 6px;transition:color .18s}.rm:hover{color:var(--red)}
+.pstatus{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px}
+.st-wait{color:var(--dim)}.st-rec{color:var(--red)}.st-done{color:var(--green)}.st-host{color:var(--amber)}
+
+/* ── STATUS ROW ── */
+.status-row{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:2px;margin:5px 0}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdot.wait{background:var(--dim)}.sdot.rec{background:var(--red);animation:blink 1s infinite;box-shadow:var(--gr)}
+.sdot.done{background:var(--green);box-shadow:var(--gg)}.sdot.host{background:var(--amber);box-shadow:var(--ga)}
+.sname{flex:1;font-size:13px}
+
+/* ── RECORDING PANEL ── */
+.rec-panel{background:#0d0000;border:2px solid var(--red);border-radius:3px;
+  padding:24px;margin:14px 0;box-shadow:0 0 30px #e5001a22;text-align:center}
+.rec-state{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,48px);
+  letter-spacing:6px;margin-bottom:8px}
+.rec-state.idle{color:var(--dim)}.rec-state.rec{color:var(--red);animation:recpulse 1s infinite}
+.rec-state.done{color:var(--green)}
+@keyframes recpulse{0%,100%{text-shadow:none}50%{text-shadow:var(--gr)}}
+.rec-timer{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,64px);
+  color:var(--text);letter-spacing:4px;line-height:1}
+.rec-tries{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:4px;color:var(--dim);margin-top:8px}
+.rec-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+
+/* ── AUDIO PLAYER ── */
+.audio-player{background:var(--bg3);border:1px solid var(--border);border-radius:2px;
+  padding:12px 16px;margin:10px 0;display:flex;align-items:center;gap:12px}
+.ap-play{width:36px;height:36px;border-radius:50%;border:1px solid var(--green);
+  background:none;cursor:pointer;color:var(--green);font-size:14px;display:flex;
+  align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.ap-play:hover{background:#001a0d}
+.ap-bar{flex:1;height:4px;background:var(--border);border-radius:2px;position:relative;cursor:pointer}
+.ap-fill{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .1s;position:relative}
+.ap-fill::after{content:'';position:absolute;right:-4px;top:-4px;width:10px;height:10px;
+  border-radius:50%;background:var(--green);box-shadow:var(--gg)}
+.ap-time{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--dim);letter-spacing:1px;
+  min-width:50px;text-align:right;flex-shrink:0}
+
+/* ── VIDEO CONTAINER ── */
+.video-wrap{background:#000;border:1px solid var(--border);border-radius:2px;
+  position:relative;overflow:hidden;aspect-ratio:16/9;margin:12px 0}
+.video-wrap video{width:100%;height:100%;object-fit:contain}
+.video-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.6);cursor:pointer;transition:opacity .2s}
+.video-overlay:hover{background:rgba(0,0,0,.4)}
+.play-icon{width:60px;height:60px;border-radius:50%;border:2px solid var(--text);
+  display:flex;align-items:center;justify-content:center;font-size:22px}
+
+/* ── UPLOAD ZONE ── */
+.uzzone{border:2px dashed var(--border);border-radius:3px;padding:20px;text-align:center;
+  cursor:pointer;transition:border-color .2s;background:#0d0d0d}
+.uzzone:hover{border-color:var(--red)}
+.uzzone input{display:none}
+.uprog{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
+.uprog-bar{height:100%;background:linear-gradient(90deg,var(--red),var(--amber));
+  border-radius:2px;transition:width .3s;box-shadow:var(--ga)}
+.uprog.on{display:block}
+
+/* ── VIDEO CARD ── */
+.vcard{background:var(--bg3);border:1px solid var(--border);border-radius:2px;
+  padding:11px 13px;margin:6px 0;display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:border-color .2s;animation:slideIn .2s ease}
+.vcard:hover{border-color:var(--red)}.vcard.sel{border-color:var(--green);box-shadow:var(--gg)}
+.vc-info{flex:1;min-width:0}
+.vc-title{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.vc-meta{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--dim);letter-spacing:2px}
+.rm2{background:none;border:none;color:#333;cursor:pointer;font-size:14px;padding:4px 6px;transition:color .18s}
+.rm2:hover{color:var(--red)}
+
+/* ── ROOM CODE ── */
+.room-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,10vw,80px);
+  letter-spacing:16px;text-align:center;color:var(--amber);text-shadow:var(--ga);padding:12px 0}
+
+/* ── SCORE ── */
+.srow{display:flex;align-items:center;padding:11px 13px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:2px;margin:5px 0}
+.rank{font-family:'Bebas Neue',sans-serif;font-size:20px;width:32px;text-align:center}
+.r1{color:#ffd700;text-shadow:0 0 10px #ffd70066}.r2{color:#aaa}.r3{color:#cd7f32}.rx{color:#333}
+.sname{flex:1;font-size:14px;padding:0 10px}
+.spts{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--amber)}
+.spts small{font-size:10px;color:var(--dim);margin-left:2px}
+
+/* ── VOTE BUTTONS ── */
+.vote-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.vbtn{font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,26px);
+  letter-spacing:3px;padding:16px 28px;border:2px solid;border-radius:3px;cursor:pointer;
+  transition:all .15s;min-width:100px;text-align:center}
+.vbtn:active{transform:scale(.95)}.vbtn:disabled{opacity:.3;cursor:not-allowed}
+.v-bad{color:var(--red);border-color:var(--red)}.v-bad:hover{background:#1a0000}
+.v-ok{color:var(--amber);border-color:var(--amber)}.v-ok:hover{background:#1a1000}
+.v-great{color:var(--green);border-color:var(--green)}.v-great:hover{background:#001a0d}
+.v-bad.voted{background:var(--red);color:#fff}
+.v-ok.voted{background:var(--amber);color:#000}
+.v-great.voted{background:var(--green);color:#000}
+
+/* ── REVEAL CARD ── */
+.reveal-card{background:#000;border:2px solid var(--amber);border-radius:3px;
+  padding:24px;margin:14px 0;box-shadow:0 0 30px #ffaa0022;text-align:center}
+.reveal-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,50px);
+  letter-spacing:6px;color:var(--amber);text-shadow:var(--ga);margin-bottom:6px}
+.reveal-score-delta{font-family:'Bebas Neue',sans-serif;font-size:clamp(20px,4vw,36px);
+  letter-spacing:4px;color:var(--green)}
+
+/* ── WAITING ── */
+.wt{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:3px;color:var(--dim)}
+.wd{width:6px;height:6px;border-radius:50%;background:var(--red);animation:wb 1.2s infinite}
+.wd:nth-child(2){animation-delay:.2s}.wd:nth-child(3){animation-delay:.4s}
+@keyframes wb{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+
+/* ── NOTIF ── */
+.notif{position:fixed;top:16px;right:16px;background:var(--bg2);border:1px solid var(--red);
+  border-radius:3px;padding:11px 16px;font-size:12px;color:var(--red);box-shadow:var(--gr);
+  z-index:99999;transform:translateX(220%);transition:transform .3s;max-width:260px;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:2px}
+.notif.on{transform:none}.notif.ok{border-color:var(--green);color:var(--green);box-shadow:var(--gg)}
+.notif.amb{border-color:var(--amber);color:var(--amber);box-shadow:var(--ga)}
+
+/* ── PROGRESS BAR ── */
+.qprog{display:flex;gap:4px;margin:12px 0;justify-content:center}
+.qpip{width:26px;height:5px;background:var(--border);border-radius:1px}
+.qpip.done{background:var(--red)}.qpip.current{background:var(--amber)}
+
+/* misc */
+.badge{font-family:'Bebas Neue',sans-serif;font-size:11px;padding:2px 8px;border-radius:2px;letter-spacing:2px}
+.badge-r{background:#1a0000;color:var(--red);border:1px solid var(--red)}
+.badge-g{background:#001a0d;color:var(--green);border:1px solid var(--green)}
+.badge-a{background:#1a1000;color:var(--amber);border:1px solid var(--amber)}
+.search-bar{position:relative;margin-bottom:10px}
+.search-bar input{padding-left:32px}
+.search-bar::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="notif" id="notif"></div>
+
+<div class="app">
+  <div class="logo">VOICE MATCH</div>
+  <div class="logo-sub">Imite · Enregistre · Juge</div>
+
+  <!-- ══ HOME ══ -->
+  <div id="screen-home" class="screen on">
+    <div class="panel tc" style="padding:32px 20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,4vw,30px);letter-spacing:4px;color:var(--text);margin-bottom:10px">Qui imite le mieux ?</div>
+      <div style="font-size:13px;line-height:2;color:var(--dim);margin-bottom:22px">
+        Une vidéo, une voix à imiter.<br>
+        Tout le monde enregistre en même temps.<br>
+        <span style="color:var(--red)">Le jury vote. Le meilleur imitateur gagne.</span>
+      </div>
+      <button class="btn bsolid-r bblock" onclick="goToHost()">🎙 CRÉER UNE PARTIE</button>
+      <button class="btn br bblock" onclick="showScreen('screen-join')">🔗 REJOINDRE</button>
+    </div>
+  </div>
+
+  <!-- ══ JOIN ══ -->
+  <div id="screen-join" class="screen">
+    <div class="panel">
+      <div class="ptitle">🔗 Rejoindre</div>
+      <label>Code de la room</label>
+      <input type="text" id="join-code" placeholder="ex: A3KX" maxlength="6"
+        style="text-transform:uppercase;letter-spacing:8px;font-size:22px;text-align:center"
+        oninput="this.value=this.value.toUpperCase()">
+      <div class="hint tc mt">Ou colle le lien reçu</div>
+      <hr>
+      <label>Ton pseudo</label>
+      <input type="text" id="join-pseudo" placeholder="Ton nom..." maxlength="16">
+      <button class="btn bg bblock mt2" onclick="joinRoom()">▶ REJOINDRE</button>
+      <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+    </div>
+  </div>
+
+  <!-- ══ PASSWORD GATE ══ -->
+  <div id="screen-password" class="screen">
+    <div class="panel tc" style="padding:32px 20px">
+      <div style="font-size:36px;margin-bottom:12px">🔒</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;margin-bottom:6px">ACCÈS HÔTE</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:var(--dim);margin-bottom:20px">Entre le mot de passe pour gérer la bibliothèque et créer des parties</div>
+      <input type="password" id="pw-input" placeholder="Mot de passe..." maxlength="32"
+        style="text-align:center;letter-spacing:4px;font-size:18px;margin-bottom:12px"
+        onkeydown="if(event.key==='Enter') checkPassword()">
+      <div id="pw-error" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:var(--red);margin-bottom:10px">MOT DE PASSE INCORRECT</div>
+      <button class="btn bsolid-r bblock" onclick="checkPassword()">▶ CONTINUER</button>
+      <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+    </div>
+  </div>
+
+  <!-- ══ HOST SETUP ══ -->
+  <div id="screen-host" class="screen">
+
+    <!-- Bibliothèque -->
+    <div class="panel">
+      <div class="ptitle">📼 Bibliothèque de vidéos</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:var(--dim);margin-bottom:12px">
+        Upload une vidéo — elle sera stockée sur Firebase et accessible par tous les joueurs
+      </div>
+      <div class="uzzone" onclick="document.getElementById('vid-file').click()" id="uzzone">
+        <input type="file" id="vid-file" accept="video/*" onchange="handleVidUpload(this)">
+        <div style="font-size:28px;margin-bottom:8px">📁</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;color:var(--dim)" id="uzlabel">Clique pour choisir une vidéo</div>
+      </div>
+      <div class="uprog" id="uprog"><div class="uprog-bar" id="uprog-bar" style="width:0%"></div></div>
+      <div class="hint" id="up-status"></div>
+
+      <div class="mt">
+        <label>Titre (optionnel)</label>
+        <input type="text" id="vid-title" placeholder="Nom de la vidéo...">
+      </div>
+      <button class="btn br mt2" style="width:100%;text-align:center" id="save-vid-btn" onclick="saveVideoToLibrary()">💾 ENREGISTRER DANS LA BIBLIOTHÈQUE</button>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">🎬 Choisir la vidéo de la manche</div>
+      <div class="search-bar"><input type="text" id="lib-search" placeholder="Rechercher..." oninput="renderLibrary()"></div>
+      <div id="lib-list"><div class="empty">BIBLIOTHÈQUE VIDE<br>Ajoute des vidéos ci-dessus</div></div>
+      <div id="selected-vid-preview" style="display:none;margin-top:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;color:var(--green);margin-bottom:6px">VIDÉO SÉLECTIONNÉE :</div>
+        <div class="video-wrap" style="aspect-ratio:16/9">
+          <video id="host-preview-vid" controls style="width:100%;height:100%;object-fit:contain"></video>
+        </div>
+      </div>
+    </div>
+
+    <!-- Joueurs -->
+    <div class="panel">
+      <div class="ptitle a">👥 Joueurs (2–8)</div>
+      <div class="row">
+        <input type="text" id="p-input" placeholder="Pseudo..." maxlength="16" onkeydown="if(event.key==='Enter')addPlayer()">
+        <button class="btn ba" onclick="addPlayer()">+ ADD</button>
+      </div>
+      <div id="player-list" class="mt"></div>
+    </div>
+
+    <!-- Params -->
+    <div class="panel">
+      <div class="ptitle b">⚙ Paramètres</div>
+      <div class="g2">
+        <div>
+          <label>Nombre de manches</label>
+          <input type="number" id="num-rounds" value="3" min="1" max="50"
+            style="width:100%;background:#0d0d0d;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:15px;padding:8px 10px;border-radius:2px;box-sizing:border-box">
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <button class="btn bsm bg" onclick="setVal('num-rounds',1)">1</button>
+            <button class="btn bsm bg" onclick="setVal('num-rounds',2)">2</button>
+            <button class="btn bsm bg" onclick="setVal('num-rounds',3)">3</button>
+            <button class="btn bsm bg" onclick="setVal('num-rounds',5)">5</button>
+            <button class="btn bsm bg" onclick="setVal('num-rounds',10)">10</button>
+          </div>
+        </div>
+        <div>
+          <label>Tentatives max / joueur</label>
+          <input type="number" id="max-tries" value="5" min="1" max="20"
+            style="width:100%;background:#0d0d0d;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:15px;padding:8px 10px;border-radius:2px;box-sizing:border-box">
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <button class="btn bsm bg" onclick="setVal('max-tries',1)">1</button>
+            <button class="btn bsm bg" onclick="setVal('max-tries',3)">3</button>
+            <button class="btn bsm bg" onclick="setVal('max-tries',5)">5</button>
+            <button class="btn bsm bg" onclick="setVal('max-tries',10)">10</button>
+          </div>
+        </div>
+      </div>
+      <div class="g2 mt">
+        <div>
+          <label>Mode</label>
+          <select id="game-mode">
+            <option value="local">Même écran (tour par tour)</option>
+            <option value="online">En ligne (chacun son appareil)</option>
+          </select>
+        </div>
+        <div id="host-pseudo-wrap">
+          <label>Ton pseudo (hôte)</label>
+          <input type="text" id="host-pseudo" placeholder="Ton nom..." maxlength="16">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn bsolid-r bblock" onclick="startGame()">🎙 LANCER LA PARTIE</button>
+    <button class="btn br bblock" style="opacity:.4" onclick="showScreen('screen-home')">← RETOUR</button>
+  </div>
+
+  <!-- ══ LOBBY ══ -->
+  <div id="screen-lobby" class="screen">
+    <div class="panel tc">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:4px;color:var(--dim);margin-bottom:4px">CODE DE LA ROOM</div>
+      <div class="room-big" id="lobby-code">A3KX</div>
+      <button class="btn ba bsm" onclick="copyRoomLink()">🔗 COPIER LE LIEN</button>
+    </div>
+    <div class="panel">
+      <div class="ptitle">👥 JOUEURS CONNECTÉS</div>
+      <div id="lobby-players"><div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>En attente...</span></div></div>
+    </div>
+    <button class="btn bg bblock" id="lobby-start" onclick="launchOnlineGame()" disabled>▶ TOUT LE MONDE EST LÀ — LANCER</button>
+    <button class="btn br bblock" style="opacity:.4" onclick="cancelLobby()">✕ ANNULER</button>
+  </div>
+
+  <!-- ══ WAITING (player joined) ══ -->
+  <div id="screen-waiting" class="screen">
+    <div class="panel tc" style="padding:36px 20px">
+      <div style="font-size:42px;margin-bottom:14px" id="wr-avatar">🎙</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;margin-bottom:8px;color:var(--green)" id="wr-name">JOUEUR</div>
+      <div class="badge badge-g" style="margin-bottom:16px">CONNECTÉ</div>
+      <div class="wt mt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DE L'HÔTE...</span></div>
+    </div>
+  </div>
+
+  <!-- ══ ROUND INTRO ══ -->
+  <div id="screen-round-intro" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0">
+      <div class="on-air">ON AIR</div>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--dim)" id="ri-badge">MANCHE 1 / 3</span>
+    </div>
+    <div class="qprog" id="ri-prog"></div>
+
+    <div class="panel">
+      <div class="ptitle a tc">🎬 Vidéo à imiter</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;color:var(--dim);text-align:center;margin-bottom:10px" id="ri-vid-title">TITRE</div>
+      <div class="video-wrap">
+        <video id="ri-video" style="width:100%;height:100%;object-fit:contain"></video>
+      </div>
+      <div id="ri-play-wrap" style="text-align:center;margin-top:10px">
+        <button class="btn bsolid-r" id="ri-play-btn" onclick="riTogglePlay()">▶ LANCER LA VIDÉO</button>
+        <div class="hint tc mt" id="ri-hint">👂 Écoute bien — tu devras imiter cette voix</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">📊 SCORES</div>
+      <div id="ri-scores"></div>
+    </div>
+
+    <button class="btn bsolid-r bblock" id="ri-start-btn" onclick="startRecordingPhase()">🎙 COMMENCER L'ENREGISTREMENT</button>
+  </div>
+
+  <!-- ══ RECORDING PHASE (local — each player takes turn) ══ -->
+  <div id="screen-recording" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0">
+      <div class="on-air" id="rec-air-badge">ON AIR</div>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--dim)" id="rec-player-name">JOUEUR</span>
+    </div>
+
+    <!-- Référence vidéo (muette pendant l'enregistrement) -->
+    <div class="panel" style="padding:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:var(--dim);margin-bottom:6px" id="rec-ref-label">RÉFÉRENCE — ÉCOUTE AVANT D'ENREGISTRER</div>
+      <video id="rec-ref-video" style="width:100%;max-height:200px;object-fit:contain;background:#000;border-radius:2px"></video>
+      <div style="text-align:center;margin-top:8px">
+        <button class="btn ba bsm" id="rec-preview-btn" onclick="recPreviewToggle()">▶ ÉCOUTER LA VIDÉO</button>
+      </div>
+    </div>
+
+    <!-- Recording panel -->
+    <div class="rec-panel">
+      <div class="rec-state" id="rec-state">PRÊT</div>
+      <!-- Waveform canvas live -->
+      <div class="waveform-wrap" id="wf-wrap" style="display:none">
+        <canvas id="wf-canvas" class="waveform-canvas"></canvas>
+        <div class="wf-playhead" id="wf-playhead" style="left:0%"></div>
+      </div>
+      <div class="rec-timer" id="rec-timer">0:00</div>
+      <div class="rec-tries" id="rec-tries">5 TENTATIVES RESTANTES</div>
+      <div class="rec-btns">
+        <button class="btn bsolid-r" id="rec-btn" onclick="toggleRecord()">⏺ ENREGISTRER</button>
+        <button class="btn bsolid-g" id="validate-btn" onclick="validateRecording()" disabled>✓ VALIDER</button>
+      </div>
+    </div>
+
+    <!-- Playback de l'enregistrement -->
+    <div id="playback-wrap" style="display:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;color:var(--green);margin-bottom:6px">TON ENREGISTREMENT :</div>
+      <audio id="playback-audio" style="display:none"></audio>
+      <!-- Waveform statique + player -->
+      <div class="waveform-wrap" id="wf-playback-wrap" style="cursor:pointer" onclick="seekFromWaveform(event,'playback-audio','wf-playback-head')">
+        <canvas id="wf-playback-canvas" class="waveform-canvas"></canvas>
+        <div class="wf-playhead" id="wf-playback-head" style="left:0%"></div>
+      </div>
+      <div class="audio-player" id="ap-custom">
+        <button class="ap-play" id="ap-play-btn" onclick="togglePlayback()">▶</button>
+        <div class="ap-bar" id="ap-bar" onclick="seekAudio(event)">
+          <div class="ap-fill" id="ap-fill"></div>
+        </div>
+        <div class="ap-time" id="ap-time">0:00</div>
+      </div>
+    </div>
+
+    <div id="upload-progress-wrap" style="display:none;margin-top:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;color:var(--amber);margin-bottom:6px">UPLOAD EN COURS...</div>
+      <div class="uprog on"><div class="uprog-bar" id="rec-uprog-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ ONLINE RECORDING (player's own device) ══ -->
+  <div id="screen-online-rec" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0">
+      <div class="on-air">ON AIR</div>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--dim)" id="or-player">JOUEUR</span>
+    </div>
+    <div class="panel" style="padding:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:var(--dim);margin-bottom:6px" id="or-ref-label">RÉFÉRENCE — ÉCOUTE AVANT D'ENREGISTRER</div>
+      <video id="or-ref-video" style="width:100%;max-height:180px;object-fit:contain;background:#000;border-radius:2px"></video>
+      <div style="text-align:center;margin-top:8px">
+        <button class="btn ba bsm" id="or-preview-btn" onclick="orPreviewToggle()">▶ ÉCOUTER LA VIDÉO</button>
+      </div>
+    </div>
+    <div class="rec-panel">
+      <div class="rec-state" id="or-rec-state">PRÊT</div>
+      <div class="waveform-wrap" id="or-wf-wrap" style="display:none">
+        <canvas id="or-wf-canvas" class="waveform-canvas"></canvas>
+        <div class="wf-playhead" id="or-wf-playhead" style="left:0%"></div>
+      </div>
+      <div class="rec-timer" id="or-timer">0:00</div>
+      <div class="rec-tries" id="or-tries">5 TENTATIVES RESTANTES</div>
+      <div class="rec-btns">
+        <button class="btn bsolid-r" id="or-rec-btn" onclick="orToggleRecord()">⏺ ENREGISTRER</button>
+        <button class="btn bsolid-g" id="or-validate-btn" onclick="orValidate()" disabled>✓ VALIDER</button>
+      </div>
+    </div>
+    <div id="or-playback-wrap" style="display:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:3px;color:var(--green);margin-bottom:6px">TON ENREGISTREMENT :</div>
+      <audio id="or-playback-audio" style="display:none"></audio>
+      <div class="waveform-wrap" id="or-wf-playback-wrap" style="cursor:pointer" onclick="seekFromWaveform(event,'or-playback-audio','or-wf-playback-head')">
+        <canvas id="or-wf-playback-canvas" class="waveform-canvas"></canvas>
+        <div class="wf-playhead" id="or-wf-playback-head" style="left:0%"></div>
+      </div>
+      <div class="audio-player">
+        <button class="ap-play" id="or-ap-btn" onclick="orTogglePlayback()">▶</button>
+        <div class="ap-bar" id="or-ap-bar" onclick="orSeekAudio(event)">
+          <div class="ap-fill" id="or-ap-fill"></div>
+        </div>
+        <div class="ap-time" id="or-ap-time">0:00</div>
+      </div>
+    </div>
+    <div id="or-validated" style="display:none" class="panel tc green" style="padding:24px">
+      <div style="font-size:36px;margin-bottom:10px">✓</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--green)">ENREGISTREMENT VALIDÉ</div>
+      <div class="wt mt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DES AUTRES...</span></div>
+    </div>
+  </div>
+
+  <!-- ══ WAITING FOR ALL RECORDINGS ══ -->
+  <div id="screen-waiting-rec" class="screen">
+    <div class="panel">
+      <div class="ptitle tc">🎙 PHASE D'ENREGISTREMENT</div>
+      <div id="rec-status-list"></div>
+      <div class="wt mt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DE TOUS LES JOUEURS...</span></div>
+    </div>
+  </div>
+
+  <!-- ══ REVEAL PHASE ══ -->
+  <div id="screen-reveal" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0">
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--dim)" id="rv-badge">REVEAL 1/4</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--dim)">MANCHE <span id="rv-round">1</span></span>
+    </div>
+
+    <div class="reveal-card">
+      <div class="reveal-name" id="rv-name">JOUEUR</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:4px;color:var(--dim);margin-bottom:12px">IMITATION</div>
+
+      <!-- Vidéo muette de référence -->
+      <video id="rv-video" muted playsinline
+        style="width:100%;max-height:180px;object-fit:contain;background:#000;border-radius:2px;margin-bottom:10px;display:none"></video>
+
+      <!-- Audio enregistré (caché, contrôlé via le player custom) -->
+      <audio id="rv-audio" style="display:none"></audio>
+
+      <!-- Player custom : lance vidéo muette + audio ensemble -->
+      <div class="audio-player" style="background:#0d0000;border-color:#330000">
+        <button class="ap-play" id="rv-ap-btn" onclick="rvTogglePlay()" style="border-color:var(--amber);color:var(--amber)">▶</button>
+        <div class="ap-bar" id="rv-ap-bar" onclick="rvSeek(event)">
+          <div class="ap-fill" id="rv-ap-fill" style="background:var(--amber)"></div>
+        </div>
+        <div class="ap-time" id="rv-ap-time">0:00</div>
+      </div>
+      <div id="rv-host-launch" style="display:none;margin-top:10px">
+        <button class="btn bsolid-a bblock" onclick="rvHostLaunch()">▶ LANCER POUR TOUT LE MONDE</button>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:3px;color:var(--dim);margin-top:8px" id="rv-hint">▶ LANCE VIDÉO + AUDIO ENSEMBLE — ÉCOUTE AVANT DE VOTER</div>
+    </div>
+
+    <!-- Vote section -->
+    <div id="rv-vote-section">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;color:var(--text);text-align:center;margin:14px 0 8px">TON AVIS :</div>
+      <div class="vote-row">
+        <button class="vbtn v-bad" id="vbtn-bad" onclick="castVote(-1)">-1<br><span style="font-size:11px;letter-spacing:2px">MAUVAIS</span></button>
+        <button class="vbtn v-ok" id="vbtn-ok" onclick="castVote(1)">+1<br><span style="font-size:11px;letter-spacing:2px">BON</span></button>
+        <button class="vbtn v-great" id="vbtn-great" onclick="castVote(2)">+2<br><span style="font-size:11px;letter-spacing:2px">EXCELLENT</span></button>
+      </div>
+    </div>
+    <div id="rv-voted-msg" style="display:none" class="panel tc green">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--green)">VOTE ENREGISTRÉ</div>
+      <div class="wt mt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DES AUTRES...</span></div>
+    </div>
+
+    <!-- Vote progress -->
+    <div class="panel" style="margin-top:12px">
+      <div class="ptitle">📊 VOTES REÇUS</div>
+      <div id="rv-votes-progress"></div>
+    </div>
+
+    <!-- Next button : hôte uniquement, quand tous ont voté -->
+    <div id="rv-next-wrap" style="display:none">
+      <button class="btn ba bblock" id="rv-next-btn" onclick="nextReveal()">▶ RÉVÉLATION SUIVANTE</button>
+    </div>
+  </div>
+
+  <!-- ══ ROUND RESULTS ══ -->
+  <div id="screen-round-results" class="screen">
+    <div class="logo" style="font-size:clamp(24px,5vw,42px);margin-bottom:6px">RÉSULTATS</div>
+    <div style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:4px;color:var(--dim);margin-bottom:16px" id="rr-round">MANCHE 1</div>
+    <div class="panel">
+      <div class="ptitle a">🏆 SCORES DE LA MANCHE</div>
+      <div id="rr-round-scores"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">📊 CLASSEMENT GÉNÉRAL</div>
+      <div id="rr-total-scores"></div>
+    </div>
+    <button class="btn bsolid-r bblock" id="rr-next-btn" onclick="nextRound()">▶ MANCHE SUIVANTE</button>
+  </div>
+
+  <!-- ══ FINAL ══ -->
+  <div id="screen-final" class="screen">
+    <div class="logo" style="font-size:clamp(26px,6vw,48px)">GAME OVER</div>
+    <div class="panel tc" style="padding:28px">
+      <div style="font-size:40px;margin-bottom:10px" id="fin-avatar">🎙</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,5vw,40px);letter-spacing:6px;color:var(--amber);text-shadow:var(--ga)" id="fin-name">JOUEUR</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:4px;color:var(--dim);margin:8px 0">MEILLEUR IMITATEUR</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green);text-shadow:var(--gg)" id="fin-pts">0 <small style="font-size:16px;color:var(--dim)">pts</small></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">🏆 CLASSEMENT FINAL</div>
+      <div id="fin-scores"></div>
+    </div>
+    <button class="btn bsolid-r bblock" onclick="restartSame()">↺ REJOUER</button>
+    <button class="btn br bblock" style="opacity:.5" onclick="goHome()">← ACCUEIL</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, collection, setDoc, getDoc, addDoc, getDocs,
+         deleteDoc, onSnapshot, updateDoc, serverTimestamp, query, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyCSQAfoZJLimX281lx_Bq4TketSih5P4bk",
+  authDomain: "freeze-game-1d557.firebaseapp.com",
+  projectId: "freeze-game-1d557",
+  messagingSenderId: "295062820266",
+  appId: "1:295062820266:web:fe07b82880c51a37b547d3"
+};
+const fbApp = initializeApp(firebaseConfig, 'voicematch');
+const db    = getFirestore(fbApp);
+
+// ── CLOUDINARY ──
+const CLD_CLOUD  = 'dqubn08xt';
+const CLD_PRESET = 'voicematch_preset';
+
+async function cloudinaryUpload(blob, folder, onProgress) {
+  const fd = new FormData();
+  fd.append('file', blob);
+  fd.append('upload_preset', CLD_PRESET);
+  fd.append('folder', folder);
+  return new Promise((res, rej) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLD_CLOUD}/upload`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const data = JSON.parse(xhr.responseText);
+        res({ url: data.secure_url, publicId: data.public_id });
+      } else rej(new Error('Cloudinary error: ' + xhr.responseText));
+    };
+    xhr.onerror = () => rej(new Error('Network error'));
+    xhr.send(fd);
+  });
+}
+
+// ══════════════════════════════════════════
+// CONSTANTS
+// ══════════════════════════════════════════
+const AVATARS = ['🎙','🎤','🦊','🐺','🎭','🦁','🐸','🦝','🦄','🐙'];
+const COLORS  = ['#e5001a','#00e56b','#ffaa00','#0088ff','#cc44ff','#ff8800','#00ccff','#ff4488','#88ff00','#ff6644'];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let library        = [];
+let selectedVidId  = null;
+let uploadVidBlob  = null;
+let unsubRoom      = null;
+
+// MediaRecorder state
+let mediaRecorder  = null;
+let audioChunks    = [];
+let recordedBlob   = null;
+let recStream      = null;
+let recTimerInt    = null;
+let recSeconds     = 0;
+let vuRafId        = null;
+let analyser       = null;
+let audioCtx       = null;
+
+// Online recorder state (player side)
+let orMediaRecorder= null;
+let orAudioChunks  = [];
+let orRecordedBlob = null;
+let orRecStream    = null;
+let orRecTimerInt  = null;
+let orRecSeconds   = 0;
+let orVuRafId      = null;
+let orAnalyser     = null;
+let orAudioCtx     = null;
+
+const gs = {
+  players: [],
+  numRounds: 3,
+  maxTries: 5,
+  mode: 'local',
+  currentRound: 0,
+  currentRevealIdx: 0,
+  roomCode: '',
+  myPlayerId: null,
+  myPlayerData: null,
+  isHost: false,
+  // Per round data
+  roundVideoId: null,
+  roundVideoURL: null,
+  recordings: {},        // playerId -> { url, tries, validated }
+  roundScores: {},       // playerId -> points this round
+  totalScores: {},       // playerId -> total points
+  reveals: [],           // ordered list of playerIds to reveal
+  votes: {},             // revealIdx -> { voterId -> value }
+  triesLeft: {},         // local mode: playerId -> tries left
+  localRecIdx: 0,        // which player is recording in local mode
+};
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  library = await loadLibrary();
+  renderLibrary();
+  const params = new URLSearchParams(location.search);
+  if (params.get('room')) {
+    document.getElementById('join-code').value = params.get('room').toUpperCase();
+    showScreen('screen-join');
+  }
+});
+
+async function loadLibrary() {
+  try {
+    const snap = await getDocs(query(collection(db, 'vm_library'), orderBy('createdAt', 'asc')));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { console.error(e); return []; }
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0, 0);
+}
+window.showScreen = showScreen;
+
+function goHome() {
+  if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+  gs.players = []; gs.currentRound = 0; gs.recordings = {};
+  renderPlayers();
+  showScreen('screen-home');
+}
+window.goHome = goHome;
+
+// ══════════════════════════════════════════
+// LIBRARY — VIDEO UPLOAD
+// ══════════════════════════════════════════
+function handleVidUpload(input) {
+  if (input.files && input.files[0]) {
+    uploadVidBlob = input.files[0];
+    document.getElementById('uzlabel').textContent = input.files[0].name;
+    if (!document.getElementById('vid-title').value)
+      document.getElementById('vid-title').value = input.files[0].name.replace(/\.[^.]+$/, '');
+  }
+}
+window.handleVidUpload = handleVidUpload;
+
+async function saveVideoToLibrary() {
+  if (!uploadVidBlob) { showNotif('Choisis une vidéo !'); return; }
+  const title = document.getElementById('vid-title').value.trim() || uploadVidBlob.name;
+  const btn = document.getElementById('save-vid-btn');
+  btn.disabled = true; btn.textContent = 'UPLOAD...';
+  document.getElementById('uprog').classList.add('on');
+  document.getElementById('up-status').textContent = 'Upload en cours...';
+
+  try {
+    const { url, publicId } = await cloudinaryUpload(uploadVidBlob, 'vm_videos', pct => {
+      document.getElementById('uprog-bar').style.width = pct + '%';
+      document.getElementById('up-status').textContent = `Upload ${pct}%...`;
+    });
+
+    const entry = { title, url, publicId, mimeType: uploadVidBlob.type, createdAt: serverTimestamp() };
+    const docRef = await addDoc(collection(db, 'vm_library'), entry);
+    entry.id = docRef.id;
+    library.push(entry);
+    uploadVidBlob = null;
+    document.getElementById('vid-file').value = '';
+    document.getElementById('uzlabel').textContent = 'Clique pour choisir une vidéo';
+    document.getElementById('vid-title').value = '';
+    document.getElementById('uprog').classList.remove('on');
+    document.getElementById('up-status').textContent = '';
+    renderLibrary();
+    showNotif('Vidéo sauvegardée !', 'ok');
+  } catch(e) {
+    console.error(e); showNotif('Erreur upload : ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 ENREGISTRER DANS LA BIBLIOTHÈQUE';
+  }
+}
+window.saveVideoToLibrary = saveVideoToLibrary;
+
+async function deleteVideo(id) {
+  const v = library.find(x => x.id === id);
+  if (!v) return;
+  try {
+    await deleteDoc(doc(db, 'vm_library', id));
+    // Note: suppression Cloudinary via dashboard (nécessite signature serveur)
+    library = library.filter(x => x.id !== id);
+    if (selectedVidId === id) { selectedVidId = null; document.getElementById('selected-vid-preview').style.display='none'; }
+    renderLibrary();
+    showNotif('Vidéo supprimée');
+  } catch(e) { showNotif('Erreur suppression'); }
+}
+window.deleteVideo = deleteVideo;
+
+function renderLibrary() {
+  const q = (document.getElementById('lib-search')||{}).value || '';
+  const items = library.filter(v => v.title.toLowerCase().includes(q.toLowerCase()));
+  if (!items.length) {
+    document.getElementById('lib-list').innerHTML = library.length
+      ? '<div class="empty">AUCUN RÉSULTAT</div>'
+      : '<div class="empty">BIBLIOTHÈQUE VIDE<br>Ajoute des vidéos ci-dessus</div>';
+    return;
+  }
+  document.getElementById('lib-list').innerHTML = items.map(v => `
+    <div class="vcard ${selectedVidId===v.id?'sel':''}" onclick="selectVideo('${v.id}')">
+      <div style="font-size:20px">🎬</div>
+      <div class="vc-info">
+        <div class="vc-title">${v.title}</div>
+        <div class="vc-meta">${selectedVidId===v.id?'✓ SÉLECTIONNÉE':'CLIQUER POUR SÉLECTIONNER'}</div>
+      </div>
+      <button class="rm2" onclick="event.stopPropagation();deleteVideo('${v.id}')">🗑</button>
+    </div>`).join('');
+}
+window.renderLibrary = renderLibrary;
+
+function selectVideo(id) {
+  selectedVidId = id;
+  const v = library.find(x => x.id === id);
+  if (!v) return;
+  renderLibrary();
+  const preview = document.getElementById('selected-vid-preview');
+  preview.style.display = 'block';
+  document.getElementById('host-preview-vid').src = v.url;
+  showNotif('Vidéo sélectionnée !', 'ok');
+}
+window.selectVideo = selectVideo;
+
+// ══════════════════════════════════════════
+// PLAYERS
+// ══════════════════════════════════════════
+function addPlayer() {
+  const input = document.getElementById('p-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (gs.players.length >= 8) { showNotif('Max 8 joueurs !'); return; }
+  if (gs.players.find(p => p.name.toLowerCase() === name.toLowerCase())) { showNotif('Nom déjà pris !'); return; }
+  const i = gs.players.length;
+  gs.players.push({ name, score: 0, avatar: AVATARS[i % AVATARS.length], color: COLORS[i % COLORS.length] });
+  input.value = ''; renderPlayers(); showNotif(name + ' ajouté !', 'ok');
+}
+window.addPlayer = addPlayer;
+function removePlayer(i) { gs.players.splice(i, 1); renderPlayers(); }
+window.removePlayer = removePlayer;
+function renderPlayers() {
+  document.getElementById('player-list').innerHTML = gs.players.map((p, i) => `
+    <div class="pchip">
+      <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44">${p.avatar}</div>
+      <span class="pname">${p.name}</span>
+      <button class="rm" onclick="removePlayer(${i})">✕</button>
+    </div>`).join('') || '<div style="color:#333;font-size:12px;padding:8px 0">Aucun joueur.</div>';
+}
+
+// ══════════════════════════════════════════
+// START GAME
+// ══════════════════════════════════════════
+
+// ══════════════════════════════════════════
+// PASSWORD GATE
+// ══════════════════════════════════════════
+// Pour changer le mot de passe : remplace le hash ci-dessous par celui de ton nouveau mot de passe.
+// Tu peux générer un hash SHA-256 sur : https://emn178.github.io/online-tools/sha256.html
+// Mot de passe par défaut : "voicematch"
+const HOST_PW_HASH = 'ef9b1d3f34a05dd3ee9cb657740a691b11c5b55695328d4e574e4819c80e2d3a';
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+let hostUnlocked = false;
+
+function goToHost() {
+  // Déjà déverrouillé dans cette session ?
+  if (hostUnlocked || sessionStorage.getItem('vm_host_ok') === '1') {
+    hostUnlocked = true;
+    showScreen('screen-host');
+    return;
+  }
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  showScreen('screen-password');
+}
+window.goToHost = goToHost;
+
+async function checkPassword() {
+  const val = document.getElementById('pw-input').value;
+  const hash = await sha256(val);
+  if (hash === HOST_PW_HASH) {
+    hostUnlocked = true;
+    sessionStorage.setItem('vm_host_ok', '1');
+    document.getElementById('pw-error').style.display = 'none';
+    showScreen('screen-host');
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+window.checkPassword = checkPassword;
+
+function setVal(id, val) {
+  document.getElementById(id).value = val;
+}
+window.setVal = setVal;
+
+// Tire numRounds vidéos aléatoires (sans répétition si possible) depuis la bibliothèque
+function pickRandomPlaylist(numRounds) {
+  if (!library.length) return [];
+  const shuffled = [...library].sort(() => Math.random() - 0.5);
+  const result = [];
+  for (let i = 0; i < numRounds; i++) {
+    result.push(shuffled[i % shuffled.length]);
+  }
+  return result;
+}
+
+async function startGame() {
+  gs.mode = document.getElementById('game-mode').value;
+  gs.ptsOk = 100;
+  gs.numRounds = Math.max(1, Math.min(50, parseInt(document.getElementById('num-rounds').value) || 3));
+  gs.maxTries  = Math.max(1, Math.min(20, parseInt(document.getElementById('max-tries').value)  || 5));
+
+  if (gs.mode === 'local' && gs.players.length < 2) { showNotif('Minimum 2 joueurs !'); return; }
+  if (gs.mode === 'online' && !document.getElementById('host-pseudo').value.trim()) { showNotif('Entre ton pseudo !'); return; }
+  if (!library.length) { showNotif('Ajoute des vidéos dans la bibliothèque !'); return; }
+
+  gs.roundPlaylist = pickRandomPlaylist(gs.numRounds);
+  gs.players.forEach(p => { p.score = 0; gs.totalScores[p.name] = 0; });
+  gs.currentRound = 0;
+
+  if (gs.mode === 'online') {
+    await startOnlineMode();
+  } else {
+    loadRoundIntro();
+  }
+}
+window.startGame = startGame;
+
+// ══════════════════════════════════════════
+// LOCAL MODE FLOW
+// ══════════════════════════════════════════
+function loadRoundIntro() {
+  gs.currentRound++;
+  gs.recordings = {};
+  gs.roundScores = {};
+  gs.votes = {};
+  gs.localRecIdx = 0;
+  gs.reveals = gs.players.map((_, i) => i);
+
+  // Pioche dans la playlist pré-tirée
+  const v = gs.roundPlaylist[gs.currentRound - 1] || library[0];
+  gs.roundVideoURL = v ? v.url : null;
+  gs.roundVideoId  = v ? v.id : null;
+
+  gs.triesLeft = {};
+  gs.players.forEach((_, i) => { gs.triesLeft[i] = gs.maxTries; });
+
+  document.getElementById('ri-badge').textContent = `MANCHE ${gs.currentRound} / ${gs.numRounds}`;
+  document.getElementById('ri-vid-title').textContent = v ? v.title.toUpperCase() : '';
+  document.getElementById('ri-video').src = gs.roundVideoURL || '';
+  document.getElementById('rec-preview-btn').textContent = '▶ ÉCOUTER LA VIDÉO';
+  renderProg('ri-prog', gs.currentRound - 1, gs.numRounds);
+  renderScoreboard('ri-scores');
+  showScreen('screen-round-intro');
+}
+
+function startRecordingPhase() {
+  // Local mode: one player at a time
+  gs.localRecIdx = 0;
+  showLocalRecording(0);
+}
+window.startRecordingPhase = startRecordingPhase;
+
+function showLocalRecording(playerIdx) {
+  const p = gs.players[playerIdx];
+  document.getElementById('rec-player-name').textContent = p.name.toUpperCase();
+  document.getElementById('rec-ref-video').src = gs.roundVideoURL || '';
+  document.getElementById('rec-preview-btn').textContent = '▶ ÉCOUTER LA VIDÉO';
+  document.getElementById('rec-state').textContent = 'PRÊT';
+  document.getElementById('rec-state').className = 'rec-state idle';
+  document.getElementById('rec-timer').textContent = '0:00';
+  document.getElementById('rec-tries').textContent = `${gs.triesLeft[playerIdx]} TENTATIVES RESTANTES`;
+  document.getElementById('rec-btn').textContent = '⏺ ENREGISTRER';
+  document.getElementById('validate-btn').disabled = true;
+  document.getElementById('playback-wrap').style.display = 'none';
+  document.getElementById('wf-wrap').style.display = 'none';
+  document.getElementById('upload-progress-wrap').style.display = 'none';
+  recordedBlob = null; audioChunks = [];
+  stopRecordingTimer();
+  showScreen('screen-recording');
+}
+
+// ── RECORDING CONTROLS (local) ──
+// ── PREVIEW VIDÉO (avant enregistrement) ──
+function recPreviewToggle() {
+  const video = document.getElementById('rec-ref-video');
+  const btn   = document.getElementById('rec-preview-btn');
+  if (video.paused) {
+    video.muted = false;
+    video.currentTime = 0;
+    video.play();
+    btn.textContent = '⏸ PAUSE';
+    video.onended = () => { btn.textContent = '▶ ÉCOUTER LA VIDÉO'; };
+  } else {
+    video.pause();
+    btn.textContent = '▶ ÉCOUTER LA VIDÉO';
+  }
+}
+window.recPreviewToggle = recPreviewToggle;
+
+function orPreviewToggle() {
+  const video = document.getElementById('or-ref-video');
+  const btn   = document.getElementById('or-preview-btn');
+  if (video.paused) {
+    video.muted = false;
+    video.currentTime = 0;
+    video.play();
+    btn.textContent = '⏸ PAUSE';
+    video.onended = () => { btn.textContent = '▶ ÉCOUTER LA VIDÉO'; };
+  } else {
+    video.pause();
+    btn.textContent = '▶ ÉCOUTER LA VIDÉO';
+  }
+}
+window.orPreviewToggle = orPreviewToggle;
+
+let isRecording = false;
+async function toggleRecord() {
+  if (isRecording) { stopRec(); return; }
+  await startRec();
+}
+window.toggleRecord = toggleRecord;
+
+async function startRec() {
+  const playerIdx = gs.localRecIdx;
+  if (gs.triesLeft[playerIdx] <= 0) { showNotif('Plus de tentatives !'); return; }
+  const refVideo = document.getElementById('rec-ref-video');
+  if (!refVideo.src) { showNotif('Vidéo de référence manquante !'); return; }
+
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    audioChunks = []; recordedBlob = null;
+    document.getElementById('playback-wrap').style.display = 'none';
+
+    // Waveform live
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(recStream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 1024;
+    src.connect(analyser);
+
+    // Afficher canvas live
+    const wfWrap = document.getElementById('wf-wrap');
+    wfWrap.style.display = 'block';
+    startLiveWaveform('wf-canvas', analyser);
+
+    mediaRecorder = new MediaRecorder(recStream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(recordedBlob);
+      document.getElementById('playback-audio').src = url;
+      // Dessiner la waveform statique du playback
+      document.getElementById('playback-wrap').style.display = 'block';
+      document.getElementById('validate-btn').disabled = false;
+      stopLiveWaveform();
+      // Dessiner waveform statique après chargement
+      const pbAudio = document.getElementById('playback-audio');
+      pbAudio.onloadedmetadata = () => drawStaticWaveform(recordedBlob, 'wf-playback-canvas');
+      recStream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    recSeconds = 0;
+
+    // Lancer la vidéo MUETTE en même temps
+    refVideo.muted = true;
+    refVideo.currentTime = 0;
+    refVideo.play();
+    document.getElementById('rec-preview-btn').textContent = '▶ ÉCOUTER LA VIDÉO';
+    document.getElementById('rec-ref-label').textContent = '📹 VIDÉO EN COURS (muette)';
+
+    // Timer calé sur la vidéo
+    startRecordingTimer('rec-timer');
+    document.getElementById('rec-state').textContent = '● REC';
+    document.getElementById('rec-state').className = 'rec-state rec';
+    document.getElementById('rec-btn').textContent = '⏹ STOP';
+    gs.triesLeft[playerIdx]--;
+    document.getElementById('rec-tries').textContent = `${gs.triesLeft[playerIdx]} TENTATIVES RESTANTES`;
+    document.getElementById('validate-btn').disabled = true;
+
+    // Auto-stop quand la vidéo se termine
+    refVideo.onended = () => { if (isRecording) stopRec(); };
+
+  } catch(e) {
+    console.error(e);
+    showNotif('Accès micro refusé !');
+  }
+}
+
+function stopRec() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  isRecording = false;
+  stopRecordingTimer();
+  document.getElementById('rec-state').textContent = 'ENREGISTRÉ';
+  document.getElementById('rec-state').className = 'rec-state done';
+  document.getElementById('rec-btn').textContent = '⏺ RECOMMENCER';
+  // Arrêter la vidéo muette
+  const refVideo = document.getElementById('rec-ref-video');
+  refVideo.pause();
+  document.getElementById('rec-ref-label').textContent = 'RÉFÉRENCE — ÉCOUTE AVANT D\'ENREGISTRER';
+  refVideo.onended = null;
+}
+
+async function validateRecording() {
+  if (!recordedBlob) { showNotif('Enregistre d\'abord !'); return; }
+  const playerIdx = gs.localRecIdx;
+  const p = gs.players[playerIdx];
+
+  // Upload to Cloudinary
+  document.getElementById('validate-btn').disabled = true;
+  document.getElementById('rec-btn').disabled = true;
+  document.getElementById('upload-progress-wrap').style.display = 'block';
+
+  try {
+    const { url } = await cloudinaryUpload(recordedBlob, 'vm_recordings', pct => {
+      document.getElementById('rec-uprog-bar').style.width = pct + '%';
+    });
+    gs.recordings[playerIdx] = { url, validated: true, playerIdx, name: p.name };
+    document.getElementById('upload-progress-wrap').style.display = 'none';
+    showNotif(`${p.name} validé !`, 'ok');
+
+    // Next player or start reveals
+    gs.localRecIdx++;
+    if (gs.localRecIdx < gs.players.length) {
+      setTimeout(() => showLocalRecording(gs.localRecIdx), 600);
+    } else {
+      setTimeout(() => startRevealPhase(), 800);
+    }
+  } catch(e) {
+    console.error(e); showNotif('Erreur upload');
+    document.getElementById('validate-btn').disabled = false;
+    document.getElementById('rec-btn').disabled = false;
+    document.getElementById('upload-progress-wrap').style.display = 'none';
+  }
+}
+window.validateRecording = validateRecording;
+
+// ══════════════════════════════════════════
+// REVEAL PHASE
+// ══════════════════════════════════════════
+function startRevealPhase() {
+  gs.currentRevealIdx = 0;
+  gs.votes = {};
+  showReveal();
+}
+
+function setupRevealScreen(playerName, audioUrl, videoUrl, isRevealedPlayer, isHost) {
+  const audio = document.getElementById('rv-audio');
+  const video = document.getElementById('rv-video');
+  audio.pause(); video.pause();
+  audio.src = audioUrl || '';
+  document.getElementById('rv-ap-btn').textContent = '▶';
+  document.getElementById('rv-ap-fill').style.width = '0%';
+  document.getElementById('rv-ap-time').textContent = '0:00';
+
+  if (videoUrl) {
+    video.src = videoUrl;
+    video.muted = true;
+    video.style.display = 'block';
+  } else {
+    video.style.display = 'none';
+  }
+
+  document.getElementById('rv-name').textContent = playerName.toUpperCase();
+
+  // Bouton play : désactivé pour tout le monde jusqu'à que l'hôte lance
+  document.getElementById('rv-ap-btn').disabled = !isHost;
+
+  // Bouton "Lancer pour tout le monde" : visible seulement pour l'hôte en online
+  document.getElementById('rv-host-launch').style.display = (isHost && gs.mode === 'online') ? 'block' : 'none';
+
+  // Hint selon le rôle
+  document.getElementById('rv-hint').textContent = isHost && gs.mode === 'online'
+    ? '▶ Lance la vidéo pour tout le monde, puis vote'
+    : isHost
+    ? '▶ Lance vidéo + audio ensemble — écoute avant de voter'
+    : '⏳ L\'hôte va lancer la lecture...';
+
+  ['vbtn-bad','vbtn-ok','vbtn-great'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = el.className.replace(/ voted/,'');
+    el.disabled = isRevealedPlayer;
+  });
+  document.getElementById('rv-vote-section').style.display = isRevealedPlayer ? 'none' : 'block';
+  document.getElementById('rv-voted-msg').style.display = 'none';
+  document.getElementById('rv-next-wrap').style.display = 'none';
+  document.getElementById('rv-votes-progress').innerHTML =
+    '<div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DES VOTES...</span></div>';
+}
+
+function showReveal() {
+  const idx = gs.reveals[gs.currentRevealIdx];
+  const rec = gs.recordings[idx];
+  const p   = gs.players[idx];
+  if (!rec || !p) { showRoundResults(); return; }
+
+  document.getElementById('rv-badge').textContent = `REVEAL ${gs.currentRevealIdx+1} / ${gs.reveals.length}`;
+  document.getElementById('rv-round').textContent = gs.currentRound;
+  setupRevealScreen(p.name, rec.url, gs.roundVideoURL, false, true);
+
+  if (!gs.votes[gs.currentRevealIdx]) gs.votes[gs.currentRevealIdx] = {};
+  showScreen('screen-reveal');
+}
+
+function castVote(val) {
+  // Mode local : vote collectif immédiat
+  const revealedIdx = gs.reveals[gs.currentRevealIdx];
+  document.getElementById('vbtn-bad').className   = 'vbtn v-bad'   + (val===-1 ? ' voted' : '');
+  document.getElementById('vbtn-ok').className    = 'vbtn v-ok'    + (val===1  ? ' voted' : '');
+  document.getElementById('vbtn-great').className = 'vbtn v-great' + (val===2  ? ' voted' : '');
+  gs.votes[gs.currentRevealIdx]['group'] = val;
+  document.getElementById('rv-vote-section').style.display = 'none';
+  document.getElementById('rv-voted-msg').style.display = 'block';
+  document.getElementById('rv-next-wrap').style.display = 'block';
+  gs.roundScores[revealedIdx] = (gs.roundScores[revealedIdx]||0) + val;
+}
+window.castVote = castVote;
+
+function updateVoteProgress() {
+  const votes = gs.votes[gs.currentRevealIdx] || {};
+  const count = Object.keys(votes).length;
+  document.getElementById('rv-votes-progress').innerHTML = count === 0
+    ? '<div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DES VOTES...</span></div>'
+    : `<div style="font-family:Bebas Neue;font-size:16px;letter-spacing:3px;color:var(--green);text-align:center">${count} VOTE${count>1?'S':''} REÇU${count>1?'S':''}</div>`;
+}
+
+function nextReveal() {
+  gs.currentRevealIdx++;
+  if (gs.currentRevealIdx >= gs.reveals.length) {
+    showRoundResults();
+  } else {
+    showReveal();
+  }
+}
+window.nextReveal = nextReveal;
+
+// ══════════════════════════════════════════
+// ROUND RESULTS
+// ══════════════════════════════════════════
+function showRoundResults() {
+  // Apply round scores to total
+  gs.players.forEach((p, i) => {
+    const pts = gs.roundScores[i] || 0;
+    p.score = (p.score || 0) + pts;
+  });
+
+  document.getElementById('rr-round').textContent = `MANCHE ${gs.currentRound}`;
+
+  // Round scores
+  const sortedRound = [...gs.players.map((p,i)=>({...p,roundPts:gs.roundScores[i]||0}))].sort((a,b)=>b.roundPts-a.roundPts);
+  document.getElementById('rr-round-scores').innerHTML = sortedRound.map((p,i)=>`
+    <div class="srow">
+      <span class="rank ${['r1','r2','r3'][i]||'rx'}">${['🥇','🥈','🥉'][i]||(i+1)}</span>
+      <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44;width:24px;height:24px;font-size:12px">${p.avatar}</div>
+      <span class="sname">${p.name}</span>
+      <span class="spts" style="color:${p.roundPts>=0?'var(--green)':'var(--red)'}">${p.roundPts>0?'+':''}${p.roundPts}<small>pts</small></span>
+    </div>`).join('');
+
+  renderScoreboard('rr-total-scores');
+
+  const isLast = gs.currentRound >= gs.numRounds;
+  const btn = document.getElementById('rr-next-btn');
+  btn.textContent = isLast ? '🏆 CLASSEMENT FINAL' : '▶ MANCHE SUIVANTE';
+  btn.onclick = isLast ? showFinal : nextRound;
+
+  showScreen('screen-round-results');
+}
+
+function nextRound() {
+  loadRoundIntro();
+}
+window.nextRound = nextRound;
+
+function showFinal() {
+  const sorted = [...gs.players].sort((a,b)=>b.score-a.score);
+  const w = sorted[0];
+  document.getElementById('fin-avatar').textContent = w.avatar;
+  document.getElementById('fin-name').textContent = w.name.toUpperCase();
+  document.getElementById('fin-pts').innerHTML = `${w.score} <small style="font-size:16px;color:var(--dim)">pts</small>`;
+  renderScoreboard('fin-scores');
+  showScreen('screen-final');
+}
+window.showFinal = showFinal;
+
+function restartSame() {
+  gs.players.forEach(p => p.score = 0);
+  gs.currentRound = 0;
+  loadRoundIntro();
+}
+window.restartSame = restartSame;
+
+// ══════════════════════════════════════════
+// ONLINE MODE — HOST
+// ══════════════════════════════════════════
+function rndCode() { const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<4;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+
+async function startOnlineMode() {
+  gs.isHost = true; gs.roomCode = rndCode();
+
+  // La playlist est déjà dans gs.roundPlaylist (tirée dans startGame)
+  const playlistForFirestore = gs.roundPlaylist.map(v => ({ id: v.id, url: v.url, title: v.title }));
+  const firstVid = gs.roundPlaylist[0] || {};
+
+  gs.myPlayerId = 'host_' + Date.now();
+  const hostName = (document.getElementById('host-pseudo').value.trim()) || 'Hôte';
+  const hostAvatar = AVATARS[0]; const hostColor = COLORS[0];
+  gs.myPlayerData = { name: hostName, avatar: hostAvatar, color: hostColor, score: 0, isHost: true };
+
+  try {
+    await setDoc(doc(db, 'vm_rooms', gs.roomCode), {
+      status: 'lobby',
+      videoURL:   firstVid.url   || '',
+      videoTitle: firstVid.title || '',
+      roundPlaylist: playlistForFirestore,
+      numRounds: gs.numRounds,
+      maxTries: gs.maxTries,
+      currentRound: 0,
+      phase: 'lobby',
+      players: { [gs.myPlayerId]: gs.myPlayerData },
+      recordings: {},
+      votes: {},
+      currentRevealIdx: 0,
+      createdAt: serverTimestamp()
+    });
+    document.getElementById('lobby-code').textContent = gs.roomCode;
+    renderLobbyPlayers({ [gs.myPlayerId]: gs.myPlayerData });
+    showScreen('screen-lobby');
+    unsubRoom = onSnapshot(doc(db,'vm_rooms',gs.roomCode), snap => {
+      const d = snap.data(); if (!d) return;
+      renderLobbyPlayers(d.players||{});
+      // Au moins 2 joueurs (hôte + 1) pour pouvoir lancer
+      document.getElementById('lobby-start').disabled = Object.keys(d.players||{}).length < 2;
+    });
+  } catch(e) { console.error(e); showNotif('Erreur Firebase'); }
+}
+
+function renderLobbyPlayers(players) {
+  const entries = Object.entries(players);
+  document.getElementById('lobby-players').innerHTML = entries.length
+    ? entries.map(([,p]) => `
+        <div class="status-row">
+          <div class="sdot host"></div>
+          <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44;width:24px;height:24px;font-size:12px">${p.avatar}</div>
+          <span class="sname">${p.name}</span>
+        </div>`).join('')
+    : '<div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>En attente de joueurs...</span></div>';
+}
+
+async function launchOnlineGame() {
+  if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+  const snap = await getDoc(doc(db,'vm_rooms',gs.roomCode));
+  const d = snap.data();
+  // Construire la liste de joueurs UNIQUEMENT depuis Firestore (inclut l'hôte + tous les rejoints)
+  gs.players = Object.entries(d.players||{}).map(([id, p], i) => ({
+    ...p, id, score: 0,
+    avatar: p.avatar || AVATARS[i % AVATARS.length],
+    color: p.color || COLORS[i % COLORS.length]
+  }));
+  gs.currentRound = 0;
+  gs.players.forEach(p => { gs.totalScores[p.name] = 0; });
+  await updateDoc(doc(db,'vm_rooms',gs.roomCode), { status:'playing', phase:'intro', currentRound:1 });
+  loadOnlineRound();
+}
+window.launchOnlineGame = launchOnlineGame;
+
+async function cancelLobby() {
+  if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+  try { await deleteDoc(doc(db,'vm_rooms',gs.roomCode)); } catch(e){}
+  showScreen('screen-host');
+}
+window.cancelLobby = cancelLobby;
+
+function copyRoomLink() {
+  const l = `${location.origin}${location.pathname}?room=${gs.roomCode}`;
+  navigator.clipboard.writeText(l).then(() => showNotif('Lien copié !', 'ok'));
+}
+window.copyRoomLink = copyRoomLink;
+
+// HOST: manage online round
+async function loadOnlineRound() {
+  gs.currentRound++;
+  gs.recordings = {}; gs.roundScores = {}; gs.votes = {};
+  const snap = await getDoc(doc(db,'vm_rooms',gs.roomCode));
+  const d = snap.data();
+
+  // Pioche la vidéo dans la playlist stockée en Firestore
+  const playlist = d.roundPlaylist || [];
+  const vid = playlist[gs.currentRound - 1] || playlist[0] || {};
+  gs.roundVideoURL = vid.url || d.videoURL || '';
+
+  // Met à jour Firestore : nouvelle vidéo + reset phase intro
+  await updateDoc(doc(db,'vm_rooms',gs.roomCode), {
+    recordings:{}, votes:{}, currentRevealIdx:0, revealPlayedAt:null,
+    phase:'intro', currentRound:gs.currentRound,
+    videoURL:   vid.url   || d.videoURL   || '',
+    videoTitle: vid.title || d.videoTitle || ''
+  });
+
+  document.getElementById('ri-badge').textContent = `MANCHE ${gs.currentRound} / ${gs.numRounds}`;
+  document.getElementById('ri-vid-title').textContent = (vid.title || d.videoTitle || '').toUpperCase();
+  document.getElementById('ri-video').src = gs.roundVideoURL;
+  document.getElementById('ri-play-btn').textContent = '▶ LANCER LA VIDÉO';
+  renderProg('ri-prog', gs.currentRound-1, gs.numRounds);
+  renderScoreboard('ri-scores');
+  document.getElementById('ri-start-btn').style.display = 'block';
+  showScreen('screen-round-intro');
+}
+
+// HOST: watch recordings and trigger reveal
+window.startRecordingPhase = async function() {
+  if (gs.mode === 'local') { startRecordingPhaseLocal(); return; }
+  // Bascule tout le monde en phase recording
+  await updateDoc(doc(db,'vm_rooms',gs.roomCode), { phase:'recording' });
+
+  // L'hôte enregistre lui aussi sur son propre appareil
+  const hostPlayer = gs.players.find(p => p.id === gs.myPlayerId);
+  if (hostPlayer) {
+    document.getElementById('or-ref-video').src = gs.roundVideoURL || '';
+    document.getElementById('or-player').textContent = (hostPlayer.name || 'HÔTE').toUpperCase();
+    document.getElementById('or-tries').textContent = `${gs.maxTries} TENTATIVES RESTANTES`;
+    document.getElementById('or-validated').style.display = 'none';
+    document.getElementById('or-rec-btn').disabled = false;
+    showScreen('screen-online-rec');
+  } else {
+    showScreen('screen-waiting-rec');
+  }
+
+  const totalPlayers = gs.players.length;
+
+  // Override orValidate pour l'hôte : upload + écoute les validations de tous
+  window.orValidate = async () => {
+    if (!orRecordedBlob) { showNotif('Enregistre d\'abord !'); return; }
+    document.getElementById('or-validate-btn').disabled = true;
+    document.getElementById('or-rec-btn').disabled = true;
+    try {
+      const { url } = await cloudinaryUpload(orRecordedBlob, 'vm_recordings');
+      const hostName = hostPlayer?.name || 'Hôte';
+      await updateDoc(doc(db,'vm_rooms',gs.roomCode), {
+        [`recordings.${gs.myPlayerId}`]: { url, validated:true, name:hostName, playerId: gs.myPlayerId }
+      });
+      document.getElementById('or-validated').style.display = 'block';
+      showNotif('Enregistrement validé !', 'ok');
+      // Affiche l'écran d'attente des autres
+      showScreen('screen-waiting-rec');
+    } catch(e) { console.error(e); showNotif('Erreur upload'); document.getElementById('or-validate-btn').disabled=false; document.getElementById('or-rec-btn').disabled=false; }
+  };
+
+  // Surveille les validations de tout le monde
+  unsubRoom = onSnapshot(doc(db,'vm_rooms',gs.roomCode), snap => {
+    const d = snap.data(); if (!d) return;
+    const recs = d.recordings || {};
+    const validated = Object.values(recs).filter(r => r.validated);
+
+    // Update status list
+    document.getElementById('rec-status-list').innerHTML = gs.players.map(p => {
+      const r = Object.values(recs).find(r2 => r2.name === p.name);
+      const done = r?.validated;
+      return `<div class="status-row">
+        <div class="sdot ${done?'done':'wait'}"></div>
+        <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44;width:24px;height:24px;font-size:12px">${p.avatar}</div>
+        <span class="sname">${p.name}${p.id===gs.myPlayerId?' (vous)':''}</span>
+        <span style="font-family:Bebas Neue;font-size:12px;letter-spacing:2px;color:${done?'var(--green)':'var(--dim)'}">${done?'VALIDÉ':'EN COURS...'}</span>
+      </div>`;
+    }).join('');
+
+    if (validated.length >= totalPlayers) {
+      if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+      Object.values(recs).forEach(r => {
+        const idx = gs.players.findIndex(p => p.name === r.name);
+        if (idx >= 0) gs.recordings[idx] = r;
+      });
+      gs.reveals = gs.players.map((_,i) => i);
+      startRevealPhaseOnline();
+    }
+  });
+};
+
+function startRecordingPhaseLocal() {
+  gs.localRecIdx = 0;
+  showLocalRecording(0);
+}
+
+async function startRevealPhaseOnline() {
+  gs.currentRevealIdx = 0;
+  // Ordre de reveal calculé UNE FOIS par l'hôte et stocké dans Firestore
+  // gs.players est dans un ordre stable côté hôte — on stocke les IDs dans cet ordre
+  const revealOrder = gs.players.map(p => p.id);
+  gs.reveals = gs.players.map((_,i) => i); // index local reste aligné
+  await updateDoc(doc(db,'vm_rooms',gs.roomCode), {
+    phase:'reveal', currentRevealIdx:0, votes:{},
+    revealOrder,           // tableau de playerIds dans l'ordre
+    revealPlayedAt: null   // reset
+  });
+  showOnlineReveal();
+}
+
+async function showOnlineReveal() {
+  // Lire l'état actuel depuis Firestore pour avoir revealOrder fiable
+  const snap = await getDoc(doc(db,'vm_rooms',gs.roomCode));
+  const d = snap.data();
+  const revealOrder = d.revealOrder || gs.players.map(p => p.id);
+  const ci = gs.currentRevealIdx;
+  const revealedId = revealOrder[ci];
+  const p   = gs.players.find(pl => pl.id === revealedId);
+  const rec = Object.values(d.recordings || {}).find(r => r.playerId === revealedId || r.name === p?.name);
+
+  if (!p || !rec) { endOnlineRound(); return; }
+
+  const isRevealedPlayer = revealedId === gs.myPlayerId;
+
+  document.getElementById('rv-badge').textContent = `REVEAL ${ci+1} / ${revealOrder.length}`;
+  document.getElementById('rv-round').textContent = gs.currentRound;
+  setupRevealScreen(p.name, rec.url, gs.roundVideoURL, isRevealedPlayer, true);
+  showScreen('screen-reveal');
+
+  const totalVoters = gs.players.length - 1;
+
+  // Fonction pour lancer la lecture (hôte déclenche, timestamp dans Firestore)
+  window.rvHostLaunch = async () => {
+    await updateDoc(doc(db,'vm_rooms',gs.roomCode), { revealPlayedAt: Date.now() });
+  };
+
+  // castVote online (hôte + joueurs)
+  window.castVote = async (val) => {
+    if (isRevealedPlayer) return;
+    document.getElementById('vbtn-bad').className   = 'vbtn v-bad'   + (val===-1 ? ' voted' : '');
+    document.getElementById('vbtn-ok').className    = 'vbtn v-ok'    + (val===1  ? ' voted' : '');
+    document.getElementById('vbtn-great').className = 'vbtn v-great' + (val===2  ? ' voted' : '');
+    document.getElementById('rv-vote-section').style.display = 'none';
+    document.getElementById('rv-voted-msg').style.display = 'block';
+    try {
+      await updateDoc(doc(db,'vm_rooms',gs.roomCode), { [`votes.${ci}.${gs.myPlayerId}`]: val });
+    } catch(e) { console.error(e); showNotif('Erreur vote'); }
+  };
+
+  let lastPlayedAt = null;
+
+  if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+  unsubRoom = onSnapshot(doc(db,'vm_rooms',gs.roomCode), snap2 => {
+    const d2 = snap2.data(); if (!d2) return;
+
+    // Sync lecture : quand l'hôte a lancé
+    if (d2.revealPlayedAt && d2.revealPlayedAt !== lastPlayedAt) {
+      lastPlayedAt = d2.revealPlayedAt;
+      const audio = document.getElementById('rv-audio');
+      const video = document.getElementById('rv-video');
+      const elapsed = (Date.now() - d2.revealPlayedAt) / 1000;
+      audio.currentTime = Math.max(0, elapsed);
+      video.currentTime = Math.max(0, elapsed);
+      audio.play().catch(()=>{});
+      video.play().catch(()=>{});
+      document.getElementById('rv-ap-btn').textContent = '⏸';
+      document.getElementById('rv-ap-btn').disabled = false;
+      document.getElementById('rv-hint').textContent = '▶ Tu peux réécouter autant de fois que tu veux';
+
+      audio.ontimeupdate = () => {
+        const pct = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+        document.getElementById('rv-ap-fill').style.width = pct + '%';
+        const s = Math.floor(audio.currentTime), m = Math.floor(s/60), ss = s%60;
+        document.getElementById('rv-ap-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+      };
+      audio.onended = () => {
+        document.getElementById('rv-ap-btn').textContent = '▶';
+        video.pause(); video.currentTime = 0;
+      };
+    }
+
+    // Progression des votes
+    const roundVotes = (d2.votes || {})[ci] || {};
+    const vcount = Object.keys(roundVotes).length;
+    document.getElementById('rv-votes-progress').innerHTML = vcount >= totalVoters
+      ? `<div style="font-family:Bebas Neue;font-size:16px;letter-spacing:3px;color:var(--green);text-align:center">✓ TOUS LES VOTES REÇUS</div>`
+      : `<div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>${vcount} / ${totalVoters} VOTES</span></div>`;
+
+    // Bouton suivant : hôte uniquement, quand tous ont voté
+    if (vcount >= totalVoters && gs.isHost) {
+      if (unsubRoom) { unsubRoom(); unsubRoom = null; }
+      const total = Object.values(roundVotes).reduce((a,b) => a+b, 0);
+      const pidx = gs.players.findIndex(pl => pl.id === revealedId);
+      if (pidx >= 0) gs.roundScores[pidx] = (gs.roundScores[pidx]||0) + total;
+      document.getElementById('rv-next-wrap').style.display = 'block';
+      document.getElementById('rv-next-btn').textContent =
+        ci < revealOrder.length-1 ? '▶ RÉVÉLATION SUIVANTE' : '📊 RÉSULTATS';
+    }
+  });
+}
+
+async function nextRevealOnline() {
+  gs.currentRevealIdx++;
+  await updateDoc(doc(db,'vm_rooms',gs.roomCode), {
+    currentRevealIdx: gs.currentRevealIdx,
+    revealPlayedAt: null   // reset pour le prochain reveal
+  });
+  if (gs.currentRevealIdx >= gs.reveals.length) {
+    endOnlineRound();
+  } else {
+    showOnlineReveal();
+  }
+}
+window.nextReveal = function() {
+  if (gs.mode === 'online' && gs.isHost) nextRevealOnline();
+  else {
+    gs.currentRevealIdx++;
+    if (gs.currentRevealIdx >= gs.reveals.length) showRoundResults();
+    else showReveal();
+  }
+};
+
+async function endOnlineRound() {
+  gs.players.forEach((p,i) => { p.score = (p.score||0) + (gs.roundScores[i]||0); });
+  const isLast = gs.currentRound >= gs.numRounds;
+
+  const roundScoresData = {};
+  gs.players.forEach((p,i) => {
+    roundScoresData[p.id] = {
+      name: p.name, avatar: p.avatar, color: p.color,
+      roundPts: gs.roundScores[i] || 0,
+      totalScore: p.score || 0
+    };
+  });
+
+  await updateDoc(doc(db,'vm_rooms',gs.roomCode), {
+    phase: 'results',
+    roundScoresData,
+    isLastRound: isLast
+  });
+
+  showOnlineRoundResults(roundScoresData, isLast);
+}
+
+function showOnlineRoundResults(roundScoresData, isLast) {
+  document.getElementById('rr-round').textContent = `MANCHE ${gs.currentRound}`;
+
+  const sorted = Object.values(roundScoresData).sort((a,b) => b.roundPts - a.roundPts);
+  document.getElementById('rr-round-scores').innerHTML = sorted.map((p,i) => `
+    <div class="srow">
+      <span class="rank ${['r1','r2','r3'][i]||'rx'}">${['🥇','🥈','🥉'][i]||(i+1)}</span>
+      <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44;width:24px;height:24px;font-size:12px">${p.avatar}</div>
+      <span class="sname">${p.name}</span>
+      <span class="spts" style="color:${p.roundPts>=0?'var(--green)':'var(--red)'}">${p.roundPts>0?'+':''}${p.roundPts}<small>pts</small></span>
+    </div>`).join('');
+
+  const sortedTotal = Object.values(roundScoresData).sort((a,b) => b.totalScore - a.totalScore);
+  document.getElementById('rr-total-scores').innerHTML = sortedTotal.map((p,i) => `
+    <div class="srow">
+      <span class="rank ${['r1','r2','r3'][i]||'rx'}">${['🥇','🥈','🥉'][i]||(i+1)}</span>
+      <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44;width:24px;height:24px;font-size:12px">${p.avatar}</div>
+      <span class="sname">${p.name}</span>
+      <span class="spts">${p.totalScore}<small>pts</small></span>
+    </div>`).join('');
+
+  const btn = document.getElementById('rr-next-btn');
+  if (gs.isHost) {
+    btn.style.display = 'block';
+    btn.textContent = isLast ? '🏆 CLASSEMENT FINAL' : '▶ MANCHE SUIVANTE';
+    btn.onclick = isLast
+      ? async () => { await updateDoc(doc(db,'vm_rooms',gs.roomCode), { phase:'final' }); showFinal(); }
+      : () => loadOnlineRound();
+  } else {
+    btn.style.display = 'none';
+  }
+  showScreen('screen-round-results');
+}
+
+
+// ══════════════════════════════════════════
+// PLAYER SIDE — ONLINE
+// ══════════════════════════════════════════
+async function joinRoom() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  const pseudo = document.getElementById('join-pseudo').value.trim();
+  if (!code) { showNotif('Entre un code !'); return; }
+  if (!pseudo) { showNotif('Entre ton pseudo !'); return; }
+  try {
+    const snap = await getDoc(doc(db,'vm_rooms',code));
+    if (!snap.exists()) { showNotif('Room introuvable !'); return; }
+    gs.roomCode = code; gs.isHost = false;
+    gs.myPlayerId = 'p_' + Date.now();
+    const idx = Object.keys(snap.data().players||{}).length;
+    gs.myPlayerData = { name: pseudo, avatar: AVATARS[idx%AVATARS.length], color: COLORS[idx%COLORS.length], score:0 };
+    gs.maxTries = snap.data().maxTries || 5;
+    gs.numRounds = snap.data().numRounds || 3;
+    await updateDoc(doc(db,'vm_rooms',code), { [`players.${gs.myPlayerId}`]: gs.myPlayerData });
+    document.getElementById('wr-avatar').textContent = gs.myPlayerData.avatar;
+    document.getElementById('wr-name').textContent = pseudo.toUpperCase();
+    showScreen('screen-waiting');
+
+    // Listen for game phases
+    let orTries = gs.maxTries;
+    let orValidated = false;
+    let lastRevealIdx = -1;
+    let lastPhase = '';
+    let lastRevPlayedAt = null;
+
+    unsubRoom = onSnapshot(doc(db,'vm_rooms',code), snap2 => {
+      const d = snap2.data(); if (!d) return;
+
+      // ── PHASE INTRO : tout le monde regarde la vidéo ──
+      if (d.phase === 'intro' && d.status === 'playing' && lastPhase !== 'intro') {
+        lastPhase = 'intro';
+        orValidated = false;
+        orTries = gs.maxTries;
+        gs.currentRound = d.currentRound || 1;
+        gs.numRounds = d.numRounds || gs.numRounds;
+        document.getElementById('ri-badge').textContent = `MANCHE ${gs.currentRound} / ${gs.numRounds}`;
+        document.getElementById('ri-vid-title').textContent = d.videoTitle?.toUpperCase() || '';
+        const riVid = document.getElementById('ri-video');
+        riVid.src = d.videoURL || '';
+        renderProg('ri-prog', gs.currentRound - 1, gs.numRounds);
+        document.getElementById('ri-start-btn').style.display = 'none';
+        document.getElementById('ri-play-btn').style.display = 'none'; // joueur ne contrôle pas
+        showScreen('screen-round-intro');
+      }
+
+      // Sync lecture vidéo intro depuis l'hôte
+      if (d.phase === 'intro' && d.videoPlayedAt) {
+        const riVid = document.getElementById('ri-video');
+        if (riVid.paused && document.getElementById('screen-round-intro').classList.contains('on')) {
+          const elapsed = (Date.now() - d.videoPlayedAt) / 1000;
+          riVid.currentTime = Math.max(0, elapsed);
+          riVid.play().catch(()=>{});
+        }
+      }
+
+      // ── PHASE RECORDING : l'hôte a lancé, on peut enregistrer ──
+      if (d.phase === 'recording' && d.status === 'playing' && lastPhase !== 'recording') {
+        lastPhase = 'recording';
+        const myRec = (d.recordings||{})[gs.myPlayerId];
+        if (!myRec?.validated && !orValidated) {
+          orValidated = false;
+          document.getElementById('or-ref-video').src = d.videoURL || '';
+          document.getElementById('or-player').textContent = pseudo.toUpperCase();
+          document.getElementById('or-tries').textContent = `${orTries} TENTATIVES RESTANTES`;
+          document.getElementById('or-validated').style.display = 'none';
+          document.getElementById('or-rec-btn').disabled = false;
+          showScreen('screen-online-rec');
+        }
+      }
+
+      if (d.phase === 'reveal') {
+        if (lastPhase !== 'reveal') lastPhase = 'reveal';
+        const ci = d.currentRevealIdx || 0;
+
+        // Utilise revealOrder stocké dans Firestore — même ordre pour tout le monde
+        const revealOrder = d.revealOrder || Object.keys(d.players || {});
+        const revealedId  = revealOrder[ci];
+        const isMe = revealedId === gs.myPlayerId;
+        const revName = (d.players||{})[revealedId]?.name || '???';
+        const revRec  = Object.values(d.recordings||{}).find(r => r.playerId === revealedId || r.name === revName);
+        const totalVoters = revealOrder.length - 1;
+
+        // Nouveau reveal : setup écran
+        if (ci !== lastRevealIdx) {
+          lastRevealIdx = ci;
+          document.getElementById('rv-badge').textContent = `REVEAL ${ci+1} / ${revealOrder.length}`;
+          document.getElementById('rv-round').textContent = d.currentRound || gs.currentRound;
+          setupRevealScreen(revName, revRec?.url || '', d.videoURL || '', isMe, false);
+          showScreen('screen-reveal');
+
+          window.castVote = async (val) => {
+            if (isMe) return;
+            document.getElementById('vbtn-bad').className   = 'vbtn v-bad'   + (val===-1 ? ' voted' : '');
+            document.getElementById('vbtn-ok').className    = 'vbtn v-ok'    + (val===1  ? ' voted' : '');
+            document.getElementById('vbtn-great').className = 'vbtn v-great' + (val===2  ? ' voted' : '');
+            document.getElementById('rv-vote-section').style.display = 'none';
+            document.getElementById('rv-voted-msg').style.display = 'block';
+            try {
+              await updateDoc(doc(db,'vm_rooms',gs.roomCode), { [`votes.${ci}.${gs.myPlayerId}`]: val });
+            } catch(e) { console.error(e); showNotif('Erreur vote'); }
+          };
+        }
+
+        // Sync lecture quand l'hôte lance
+        if (d.revealPlayedAt && d.revealPlayedAt !== lastRevPlayedAt) {
+          lastRevPlayedAt = d.revealPlayedAt;
+          const audio = document.getElementById('rv-audio');
+          const video = document.getElementById('rv-video');
+          const elapsed = (Date.now() - d.revealPlayedAt) / 1000;
+          audio.currentTime = Math.max(0, elapsed);
+          video.currentTime = Math.max(0, elapsed);
+          audio.play().catch(()=>{});
+          video.play().catch(()=>{});
+          document.getElementById('rv-ap-btn').textContent = '⏸';
+          document.getElementById('rv-ap-btn').disabled = false;
+          document.getElementById('rv-hint').textContent = '▶ Tu peux réécouter autant de fois que tu veux';
+          audio.ontimeupdate = () => {
+            const pct = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+            document.getElementById('rv-ap-fill').style.width = pct + '%';
+            const s = Math.floor(audio.currentTime), m = Math.floor(s/60), ss = s%60;
+            document.getElementById('rv-ap-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+          };
+          audio.onended = () => { document.getElementById('rv-ap-btn').textContent = '▶'; video.pause(); video.currentTime = 0; };
+        }
+
+        // Progression des votes
+        const roundVotes = (d.votes || {})[ci] || {};
+        const vcount = Object.keys(roundVotes).length;
+        document.getElementById('rv-votes-progress').innerHTML = vcount >= totalVoters
+          ? `<div style="font-family:Bebas Neue;font-size:16px;letter-spacing:3px;color:var(--green);text-align:center">✓ TOUS LES VOTES REÇUS</div>`
+          : `<div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>${vcount} / ${totalVoters} VOTES</span></div>`;
+      }
+
+      // ── PHASE RESULTS : tout le monde voit les scores ──
+      if (d.phase === 'results' && lastPhase !== 'results') {
+        lastPhase = 'results';
+        gs.currentRound = d.currentRound || gs.currentRound;
+        const roundScoresData = d.roundScoresData || {};
+        const isLast = d.isLastRound || false;
+        showOnlineRoundResults(roundScoresData, isLast);
+      }
+
+      // ── PHASE FINAL ──
+      if (d.phase === 'final' && lastPhase !== 'final') {
+        lastPhase = 'final';
+        // Reconstruire gs.players depuis roundScoresData pour afficher le podium
+        const rsd = d.roundScoresData || {};
+        gs.players = Object.entries(rsd).map(([id, p]) => ({ ...p, id, score: p.totalScore || 0 }));
+        showFinal();
+      }
+    });
+
+    // OR validate: upload and mark validated in Firestore
+    window.orValidate = async () => {
+      if (!orRecordedBlob) { showNotif('Enregistre d\'abord !'); return; }
+      document.getElementById('or-validate-btn').disabled = true;
+      document.getElementById('or-rec-btn').disabled = true;
+      try {
+        const { url } = await cloudinaryUpload(orRecordedBlob, 'vm_recordings');
+        await updateDoc(doc(db,'vm_rooms',code), {
+          [`recordings.${gs.myPlayerId}`]: { url, validated:true, name:pseudo, playerId: gs.myPlayerId }
+        });
+        orValidated = true;
+        document.getElementById('or-validated').style.display = 'block';
+        showNotif('Enregistrement validé !', 'ok');
+      } catch(e) { console.error(e); showNotif('Erreur upload'); document.getElementById('or-validate-btn').disabled=false; document.getElementById('or-rec-btn').disabled=false; }
+    };
+
+  } catch(e) { console.error(e); showNotif('Erreur connexion'); }
+}
+window.joinRoom = joinRoom;
+
+// ── ONLINE RECORDER CONTROLS ──
+let orIsRecording = false;
+async function orToggleRecord() {
+  if (orIsRecording) { orStopRec(); return; }
+  const triesEl = document.getElementById('or-tries');
+  const triesLeft = parseInt(triesEl.textContent) || 0;
+  if (triesLeft <= 0) { showNotif('Plus de tentatives !'); return; }
+  const refVideo = document.getElementById('or-ref-video');
+
+  try {
+    orRecStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+    orAudioChunks = []; orRecordedBlob = null;
+    document.getElementById('or-playback-wrap').style.display = 'none';
+
+    orAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const src = orAudioCtx.createMediaStreamSource(orRecStream);
+    orAnalyser = orAudioCtx.createAnalyser();
+    orAnalyser.fftSize = 1024;
+    src.connect(orAnalyser);
+
+    const orWfWrap = document.getElementById('or-wf-wrap');
+    orWfWrap.style.display = 'block';
+    startLiveWaveform('or-wf-canvas', orAnalyser, true);
+
+    orMediaRecorder = new MediaRecorder(orRecStream);
+    orMediaRecorder.ondataavailable = e => { if(e.data.size>0) orAudioChunks.push(e.data); };
+    orMediaRecorder.onstop = () => {
+      orRecordedBlob = new Blob(orAudioChunks, {type:'audio/webm'});
+      const url = URL.createObjectURL(orRecordedBlob);
+      document.getElementById('or-playback-audio').src = url;
+      document.getElementById('or-playback-wrap').style.display = 'block';
+      document.getElementById('or-validate-btn').disabled = false;
+      stopLiveWaveform(true);
+      const pbAudio = document.getElementById('or-playback-audio');
+      pbAudio.onloadedmetadata = () => drawStaticWaveform(orRecordedBlob, 'or-wf-playback-canvas');
+      orRecStream.getTracks().forEach(t=>t.stop());
+    };
+    orMediaRecorder.start();
+    orIsRecording = true;
+    orRecSeconds = 0;
+
+    // Lancer vidéo MUETTE
+    refVideo.muted = true;
+    refVideo.currentTime = 0;
+    refVideo.play();
+    document.getElementById('or-preview-btn').textContent = '▶ ÉCOUTER LA VIDÉO';
+    document.getElementById('or-ref-label').textContent = '📹 VIDÉO EN COURS (muette)';
+
+    startRecordingTimer('or-timer', true);
+    document.getElementById('or-rec-state').textContent = '● REC';
+    document.getElementById('or-rec-state').className = 'rec-state rec';
+    document.getElementById('or-rec-btn').textContent = '⏹ STOP';
+    const newTries = triesLeft - 1;
+    triesEl.textContent = `${newTries} TENTATIVES RESTANTES`;
+    document.getElementById('or-validate-btn').disabled = true;
+
+    // Auto-stop à la fin de la vidéo
+    refVideo.onended = () => { if (orIsRecording) orStopRec(); };
+
+  } catch(e) { console.error(e); showNotif('Accès micro refusé !'); }
+}
+window.orToggleRecord = orToggleRecord;
+
+function orStopRec() {
+  if (orMediaRecorder && orMediaRecorder.state !== 'inactive') orMediaRecorder.stop();
+  orIsRecording = false;
+  stopRecordingTimer(true);
+  document.getElementById('or-rec-state').textContent = 'ENREGISTRÉ';
+  document.getElementById('or-rec-state').className = 'rec-state done';
+  document.getElementById('or-rec-btn').textContent = '⏺ RECOMMENCER';
+  const refVideo = document.getElementById('or-ref-video');
+  refVideo.pause();
+  document.getElementById('or-ref-label').textContent = 'RÉFÉRENCE — ÉCOUTE AVANT D\'ENREGISTRER';
+  refVideo.onended = null;
+}
+
+// ══════════════════════════════════════════
+// ── INTRO VIDEO SYNC ──
+function riTogglePlay() {
+  const video = document.getElementById('ri-video');
+  const btn   = document.getElementById('ri-play-btn');
+  if (video.paused) {
+    video.play();
+    btn.textContent = '⏸ PAUSE';
+    if (gs.mode === 'online' && gs.isHost) {
+      updateDoc(doc(db,'vm_rooms',gs.roomCode), { videoPlayedAt: Date.now() }).catch(console.error);
+    }
+  } else {
+    video.pause();
+    btn.textContent = '▶ LANCER LA VIDÉO';
+  }
+}
+window.riTogglePlay = riTogglePlay;
+
+// ══════════════════════════════════════════
+// WAVEFORM ENGINE
+// ══════════════════════════════════════════
+let wfRafId = null, orWfRafId = null;
+
+function startLiveWaveform(canvasId, analyserNode, isOnline=false) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  canvas.width = canvas.offsetWidth || 300;
+  canvas.height = 48;
+  const ctx = canvas.getContext('2d');
+  const bufLen = analyserNode.frequencyBinCount;
+  const dataArr = new Uint8Array(bufLen);
+  function draw() {
+    const rafId = requestAnimationFrame(draw);
+    if (isOnline) orWfRafId = rafId; else wfRafId = rafId;
+    analyserNode.getByteTimeDomainData(dataArr);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    const grad = ctx.createLinearGradient(0,0,canvas.width,0);
+    grad.addColorStop(0,'#e5001a'); grad.addColorStop(.5,'#ffaa00'); grad.addColorStop(1,'#e5001a');
+    ctx.strokeStyle = grad;
+    ctx.beginPath();
+    const sliceW = canvas.width / bufLen;
+    let x = 0;
+    for (let i = 0; i < bufLen; i++) {
+      const v = dataArr[i] / 128;
+      const y = (v * canvas.height) / 2;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      x += sliceW;
+    }
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+  }
+  draw();
+}
+
+function stopLiveWaveform(isOnline=false) {
+  cancelAnimationFrame(isOnline ? orWfRafId : wfRafId);
+}
+
+async function drawStaticWaveform(blob, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  canvas.width = canvas.offsetWidth || 300;
+  canvas.height = 48;
+  const ctx = canvas.getContext('2d');
+  try {
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioCtxTmp = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioCtxTmp.decodeAudioData(arrayBuffer);
+    const data = audioBuffer.getChannelData(0);
+    const step = Math.ceil(data.length / canvas.width);
+    const amp  = canvas.height / 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const wfGrad = ctx.createLinearGradient(0,0,canvas.width,0);
+    wfGrad.addColorStop(0,'#3344cc'); wfGrad.addColorStop(0.5,'#5566ff'); wfGrad.addColorStop(1,'#3344cc');
+    ctx.beginPath();
+    ctx.moveTo(0, amp);
+    for (let i = 0; i < canvas.width; i++) {
+      let min = 1, max = -1;
+      for (let j = 0; j < step; j++) {
+        const d = data[(i * step) + j] || 0;
+        if (d < min) min = d; if (d > max) max = d;
+      }
+      ctx.lineTo(i, amp + min * amp * 0.9);
+    }
+    for (let i = canvas.width - 1; i >= 0; i--) {
+      let max = -1;
+      for (let j = 0; j < step; j++) {
+        const d = data[(i * step) + j] || 0;
+        if (d > max) max = d;
+      }
+      ctx.lineTo(i, amp - max * amp * 0.9);
+    }
+    ctx.closePath();
+    ctx.fillStyle = wfGrad;
+    ctx.fill();
+    audioCtxTmp.close();
+  } catch(e) { console.warn('Waveform decode error', e); }
+}
+
+function seekFromWaveform(e, audioId, headId) {
+  const canvas = e.currentTarget.querySelector('canvas');
+  const audio  = document.getElementById(audioId);
+  if (!canvas || !audio.duration) return;
+  const pct = (e.clientX - canvas.getBoundingClientRect().left) / canvas.width;
+  audio.currentTime = Math.max(0, Math.min(1, pct)) * audio.duration;
+  document.getElementById(headId).style.left = (pct * 100) + '%';
+}
+window.seekFromWaveform = seekFromWaveform;
+
+function animatePlayhead(audioEl, headId, fillId, timeId, btnId) {
+  audioEl.ontimeupdate = () => {
+    const pct = audioEl.duration ? (audioEl.currentTime / audioEl.duration) : 0;
+    if (headId) document.getElementById(headId).style.left = (pct * 100) + '%';
+    if (fillId) document.getElementById(fillId).style.width = (pct * 100) + '%';
+    if (timeId) {
+      const s = Math.floor(audioEl.currentTime), m = Math.floor(s/60), ss = s%60;
+      document.getElementById(timeId).textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+    }
+  };
+  audioEl.onended = () => {
+    if (headId) document.getElementById(headId).style.left = '0%';
+    if (btnId)  document.getElementById(btnId).textContent = '▶';
+  };
+}
+
+// ══════════════════════════════════════════
+// RECORDING TIMER
+// ══════════════════════════════════════════
+function startRecordingTimer(elId, isOnline=false) {
+  stopRecordingTimer(isOnline);
+  const start = Date.now();
+  const el = document.getElementById(elId);
+  const interval = setInterval(() => {
+    const s = Math.floor((Date.now()-start)/1000);
+    const m = Math.floor(s/60), ss = s%60;
+    el.textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+  }, 200);
+  if (isOnline) orRecTimerInt = interval;
+  else recTimerInt = interval;
+}
+function stopRecordingTimer(isOnline=false) {
+  clearInterval(isOnline ? orRecTimerInt : recTimerInt);
+}
+
+// ══════════════════════════════════════════
+// AUDIO PLAYER HELPERS
+// ══════════════════════════════════════════
+function resetAudioPlayer(btnId, audioId, fillId, timeId) {
+  const audio = document.getElementById(audioId);
+  document.getElementById(btnId).textContent = '▶';
+  document.getElementById(fillId).style.width = '0%';
+  document.getElementById(timeId).textContent = '0:00';
+  audio.ontimeupdate = () => {
+    const pct = audio.duration ? (audio.currentTime/audio.duration*100) : 0;
+    document.getElementById(fillId).style.width = pct+'%';
+    const s = Math.floor(audio.currentTime), m=Math.floor(s/60), ss=s%60;
+    document.getElementById(timeId).textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+  };
+  audio.onended = () => { document.getElementById(btnId).textContent = '▶'; };
+}
+
+function togglePlayback() {
+  const a   = document.getElementById('playback-audio');
+  const btn = document.getElementById('ap-play-btn');
+  if (a.paused) {
+    a.play();
+    btn.textContent = '⏸';
+    animatePlayhead(a, 'wf-playback-head', 'ap-fill', 'ap-time', 'ap-play-btn');
+  } else {
+    a.pause();
+    btn.textContent = '▶';
+  }
+}
+window.togglePlayback = togglePlayback;
+
+function seekAudio(e) {
+  const bar = document.getElementById('ap-bar');
+  const a = document.getElementById('playback-audio');
+  const pct = (e.clientX - bar.getBoundingClientRect().left) / bar.offsetWidth;
+  if (a.duration) a.currentTime = pct * a.duration;
+}
+window.seekAudio = seekAudio;
+
+function orTogglePlayback() {
+  const a   = document.getElementById('or-playback-audio');
+  const btn = document.getElementById('or-ap-btn');
+  if (a.paused) {
+    a.play();
+    btn.textContent = '⏸';
+    animatePlayhead(a, 'or-wf-playback-head', 'or-ap-fill', 'or-ap-time', 'or-ap-btn');
+  } else {
+    a.pause();
+    btn.textContent = '▶';
+  }
+}
+window.orTogglePlayback = orTogglePlayback;
+
+function orSeekAudio(e) {
+  const bar = document.getElementById('or-ap-bar');
+  const a = document.getElementById('or-playback-audio');
+  const pct = (e.clientX - bar.getBoundingClientRect().left) / bar.offsetWidth;
+  if (a.duration) a.currentTime = pct * a.duration;
+}
+window.orSeekAudio = orSeekAudio;
+
+function rvTogglePlay() {
+  const audio = document.getElementById('rv-audio');
+  const video = document.getElementById('rv-video');
+  const btn   = document.getElementById('rv-ap-btn');
+
+  if (audio.paused) {
+    // Lance audio + vidéo muette ensemble
+    audio.currentTime = 0;
+    video.currentTime = 0;
+    const playAudio = audio.play();
+    const playVideo = video.play().catch(()=>{});
+    btn.textContent = '⏸';
+
+    audio.ontimeupdate = () => {
+      const p = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+      document.getElementById('rv-ap-fill').style.width = p + '%';
+      const s = Math.floor(audio.currentTime), m = Math.floor(s/60), ss = s%60;
+      document.getElementById('rv-ap-time').textContent = `${m}:${ss.toString().padStart(2,'0')}`;
+    };
+    audio.onended = () => {
+      btn.textContent = '▶';
+      video.pause();
+      video.currentTime = 0;
+    };
+  } else {
+    audio.pause();
+    video.pause();
+    btn.textContent = '▶';
+  }
+}
+window.rvTogglePlay = rvTogglePlay;
+
+function rvSeek(e) {
+  const bar   = document.getElementById('rv-ap-bar');
+  const audio = document.getElementById('rv-audio');
+  const video = document.getElementById('rv-video');
+  const pct   = (e.clientX - bar.getBoundingClientRect().left) / bar.offsetWidth;
+  if (audio.duration) {
+    audio.currentTime = pct * audio.duration;
+    video.currentTime = audio.currentTime;
+  }
+}
+window.rvSeek = rvSeek;
+
+// ══════════════════════════════════════════
+// SCOREBOARD / PROGRESS
+// ══════════════════════════════════════════
+function renderScoreboard(id) {
+  const sorted = [...gs.players].sort((a,b)=>b.score-a.score);
+  const r=['🥇','🥈','🥉'], rc=['r1','r2','r3'];
+  document.getElementById(id).innerHTML = sorted.map((p,i) => `
+    <div class="srow">
+      <span class="rank ${rc[i]||'rx'}">${r[i]||(i+1)}</span>
+      <div class="av" style="background:${p.color}22;border:1px solid ${p.color}44;width:24px;height:24px;font-size:12px">${p.avatar}</div>
+      <span class="sname">${p.name}</span>
+      <span class="spts">${p.score}<small>pts</small></span>
+    </div>`).join('');
+}
+
+function renderProg(id, current, total) {
+  document.getElementById(id).innerHTML = Array.from({length:total},(_,i)=>
+    `<div class="qpip ${i<current?'done':i===current?'current':''}"></div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// NOTIF
+// ══════════════════════════════════════════
+function showNotif(msg, type='') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'notif' + (type==='ok'?' ok':type==='amb'?' amb':'');
+  el.classList.add('on'); clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('on'), 2600);
+}
+window.showNotif = showNotif;
+</script>
+</body>
+</html>
