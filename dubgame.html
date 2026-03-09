@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>DUB STUDIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#e5001a;--amber:#ffaa00;--green:#00e57a;--blue:#4488ff;
+  --bg:#090909;--panel:#111;--panel2:#161616;--border:#1e1e1e;--text:#efefef;--dim:#484848;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:9999}
+.app{max-width:500px;margin:0 auto;padding:12px 14px 40px;min-height:100vh}
+body.fullscreen .app{max-width:100%;padding:0}
+body.pickmode .app{max-width:100%;padding:12px 0}
+.pick-screen .pick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:80%;margin:0 auto}
+.pick-screen{max-width:100%!important;padding:12px 0}
+body.fullscreen .logo,body.fullscreen .logo-sub{display:none}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,7vw,44px);letter-spacing:10px;text-align:center}
+.logo-accent{color:var(--amber)}
+.logo-sub{font-size:10px;letter-spacing:6px;color:var(--dim);text-align:center;margin-bottom:14px}
+.screen{display:none;flex-direction:column;gap:10px}.screen.on{display:flex}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:14px}
+.ptitle{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:4px;color:var(--dim);margin-bottom:10px}
+.ptitle.a{color:var(--amber)}.ptitle.g{color:var(--green)}.ptitle.r{color:var(--red)}
+label{display:block;font-size:10px;letter-spacing:3px;color:var(--dim);margin-bottom:5px;text-transform:uppercase}
+input,select{width:100%;background:#0d0d0d;border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;padding:8px 10px;border-radius:2px;outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--amber)}
+.hint{font-size:10px;letter-spacing:2px;color:var(--dim);text-align:center}
+.tc{text-align:center}.mt{margin-top:8px}.mt2{margin-top:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;padding:9px 16px;border:1px solid;border-radius:2px;cursor:pointer;background:transparent;transition:all .15s;text-align:center}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.bblock{display:block;width:100%;margin-top:8px}
+.bsolid-r{border-color:var(--red);color:var(--red)}.bsolid-r:hover:not(:disabled){background:var(--red);color:#000}
+.bsolid-a{border-color:var(--amber);color:var(--amber)}.bsolid-a:hover:not(:disabled){background:var(--amber);color:#000}
+.bsolid-g{border-color:var(--green);color:var(--green)}.bsolid-g:hover:not(:disabled){background:var(--green);color:#000}
+.br{border-color:var(--border);color:var(--dim)}.br:hover:not(:disabled){border-color:var(--text);color:var(--text)}
+.ba{border-color:var(--border);color:var(--dim)}.ba:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.bsm{font-size:11px;padding:5px 10px}
+.on-air{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:3px;background:#1a0000;color:var(--red);border:1px solid var(--red);padding:3px 8px;border-radius:1px;animation:air 1.2s ease-in-out infinite;display:inline-block}
+@keyframes air{0%,100%{opacity:1;box-shadow:0 0 6px var(--red)}50%{opacity:.4;box-shadow:none}}
+.notif{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--panel);border:1px solid var(--amber);color:var(--amber);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;padding:7px 18px;z-index:10000;transition:transform .3s;white-space:nowrap;border-radius:2px}
+.notif.ok{border-color:var(--green);color:var(--green)}.notif.show{transform:translateX(-50%) translateY(0)}
+.wt{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:3px;color:var(--dim);justify-content:center}
+.wd{width:5px;height:5px;border-radius:50%;background:var(--dim);animation:wd .9s infinite}
+.wd:nth-child(2){animation-delay:.2s}.wd:nth-child(3){animation-delay:.4s}
+@keyframes wd{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.uzzone{border:1px dashed var(--border);padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;border-radius:2px}
+.uzzone:hover{border-color:var(--amber)}.uzzone input[type=file]{display:none}
+.uprog{height:2px;background:var(--border);border-radius:1px;overflow:hidden;margin-top:6px;display:none}
+.uprog.on{display:block}.uprog-bar{height:100%;background:var(--amber);transition:width .3s}
+
+/* SCENE CARD (video selection) */
+.pick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:80%;margin:0 auto}
+.scene-card{background:var(--panel2);border:1px solid var(--border);border-radius:2px;overflow:hidden;transition:border-color .2s}
+.scene-card.host-pick{cursor:pointer}.scene-card.host-pick:hover{border-color:var(--amber)}
+.scene-card.selected{border-color:var(--amber);background:#0d0900}
+.sc-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#000}
+.sc-body{padding:10px 12px}
+.sc-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px}
+.sc-chars{font-size:10px;letter-spacing:2px;color:var(--dim);margin:3px 0 8px}
+.sc-votes-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vote-chip{font-size:10px;padding:2px 7px;border-radius:10px;background:#1a1000;border:1px solid #332200;color:var(--amber)}
+.vote-btn{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;border:1px solid var(--border);background:none;color:var(--dim);padding:3px 10px;border-radius:2px;cursor:pointer;transition:all .15s}
+.vote-btn:hover,.vote-btn.on{border-color:var(--amber);color:var(--amber);background:#1a1000}
+
+/* CAST */
+.cast-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#0d0d0d;border:1px solid var(--border);border-radius:2px;margin-bottom:6px}
+.cast-char{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;color:var(--amber);min-width:90px;flex-shrink:0}
+
+/* PLAYER STATUS */
+.prow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.prow:last-child{border-bottom:none}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.pdot.ok{background:var(--green)}.pdot.host{background:var(--amber)}.pdot.wait{background:var(--dim);animation:air 1s infinite}
+.room-code{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:16px;text-align:center;color:var(--amber);margin:8px 0}
+
+/* WATCH SCREEN */
+.watch-wrap{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;z-index:100}
+.watch-video-area{flex:1 1 80%;position:relative;min-height:0}
+.watch-video-area video{width:100%;height:100%;object-fit:contain;display:block}
+.watch-rythmo-area{flex:0 0 20%;min-height:80px;max-height:180px;position:relative;background:#090000;border-top:1px solid #2a0000}
+.watch-fullvideo{position:fixed;inset:0;background:#000;z-index:100}
+.watch-fullvideo video{width:100%;height:100%;object-fit:contain;display:block}
+.watch-overlay{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-start;z-index:5;pointer-events:none}
+.watch-char-badge{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;background:rgba(0,0,0,.7);border:1px solid var(--amber);color:var(--amber);padding:3px 10px;border-radius:2px;pointer-events:auto}
+.watch-ctrl{position:absolute;bottom:calc(20% + 8px);left:50%;transform:translateX(-50%);z-index:6;display:none}
+.watch-ctrl.host-ctrl{display:block}
+.watch-ctrl-btn{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:4px;background:var(--amber);color:#000;border:none;padding:10px 28px;border-radius:2px;cursor:pointer;pointer-events:auto}
+.watch-ctrl-btn:hover{background:#ffcc44}
+.watch-status{position:absolute;bottom:calc(20% + 8px);left:50%;transform:translateX(-50%);z-index:6;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;color:var(--dim);background:rgba(0,0,0,.6);padding:5px 12px;border-radius:2px}
+.watch-end-overlay{position:absolute;inset:0;background:rgba(0,0,0,.75);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:7;gap:12px}
+.watch-end-overlay.on{display:flex}
+
+/* BANDE RYTHMO MULTI-LIGNES */
+.rythmo-wrap{position:relative;background:#090000;border:1px solid #1a0000;border-radius:2px;overflow:hidden}
+.rythmo-track{position:absolute;top:0;left:0;bottom:0;will-change:transform}
+.rythmo-row{position:absolute;top:0;left:0;right:0;height:36px;border-bottom:1px solid #1a0000}
+.rythmo-row:last-child{border-bottom:none}
+.rythmo-row-label{position:absolute;left:0;top:0;bottom:0;width:70px;display:flex;align-items:center;padding:0 6px;background:#0d0000;border-right:1px solid #2a0000;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;z-index:3;white-space:nowrap;overflow:hidden}
+.rythmo-row-label.mine{color:var(--amber)}.rythmo-row-label.other{color:#444}
+.rythmo-seg{position:absolute;display:flex;align-items:center;padding:0 8px;border-right:1px solid #1a0000;white-space:nowrap;font-family:'Share Tech Mono',monospace;font-size:11px;height:100%;left:70px;transition:background .1s}
+.rythmo-seg.mine{color:var(--amber)}.rythmo-seg.mine.active{background:#150a00;color:#ffcc44;font-weight:bold}
+.rythmo-seg.other{color:#2a2a2a}.rythmo-seg.other.active{color:#444;background:#0d0d0d}
+.rythmo-cursor{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--red);transform:translateX(-50%);z-index:10;box-shadow:0 0 8px var(--red)}
+
+/* WAVEFORM */
+.waveform-wrap{position:relative;height:44px;background:#0d0d0d;border-radius:2px;overflow:hidden;cursor:pointer}
+.waveform-canvas{width:100%;height:44px;display:block}
+.wf-playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--red);pointer-events:none}
+
+/* AUDIO PLAYER */
+.audio-player{display:flex;align-items:center;gap:8px;background:#0d0d0d;border:1px solid var(--border);border-radius:2px;padding:7px 10px}
+.ap-play{width:30px;height:30px;border-radius:50%;border:1px solid var(--amber);background:none;color:var(--amber);font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ap-bar{flex:1;height:3px;background:#222;border-radius:2px;cursor:pointer}
+.ap-fill{height:100%;background:var(--amber);border-radius:2px;width:0%}
+.ap-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);flex-shrink:0;min-width:30px;text-align:right}
+
+.srow{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.srow:last-child{border-bottom:none}
+.rank{font-family:'Bebas Neue',sans-serif;font-size:16px;width:26px;text-align:center}
+.r1{color:#ffd700}.r2{color:#c0c0c0}.r3{color:#cd7f32}.rx{color:var(--dim)}
+.sname{flex:1;font-size:13px;letter-spacing:2px}
+.spts{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="notif" id="notif"></div>
+<div class="app">
+  <div class="logo">DUB <span class="logo-accent">STUDIO</span></div>
+  <div class="logo-sub">Doublage · Bande Rythmo · Performance</div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen on">
+    <div class="panel tc" style="padding:28px 16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;margin-bottom:8px">Prenez le micro. Jouez le rôle.</div>
+      <div style="font-size:13px;line-height:2;color:var(--dim);margin-bottom:20px">Une scène, plusieurs personnages.<br>Chacun double son rôle en suivant la bande rythmo.<br><span style="color:var(--amber)">On rejoue tout ensemble.</span></div>
+      <button class="btn bsolid-a bblock" onclick="goToHost()">🎬 CRÉER UNE PARTIE</button>
+      <button class="btn br bblock" onclick="showScreen('screen-join')">🔗 REJOINDRE</button>
+    </div>
+  </div>
+
+  <!-- PASSWORD -->
+  <div id="screen-password" class="screen">
+    <div class="panel tc" style="padding:28px 16px">
+      <div style="font-size:32px;margin-bottom:10px">🔒</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;margin-bottom:14px">ACCÈS STUDIO</div>
+      <input type="password" id="pw-input" placeholder="Mot de passe..." maxlength="32" style="text-align:center;letter-spacing:4px;font-size:16px;margin-bottom:10px" onkeydown="if(event.key==='Enter')checkPassword()">
+      <div id="pw-error" style="display:none;font-size:11px;letter-spacing:2px;color:var(--red);margin-bottom:8px">MOT DE PASSE INCORRECT</div>
+      <button class="btn bsolid-a bblock" onclick="checkPassword()">▶ ENTRER</button>
+      <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+    </div>
+  </div>
+
+  <!-- HOST SETUP -->
+  <div id="screen-host" class="screen">
+    <div class="panel">
+      <div class="ptitle a">📼 BIBLIOTHÈQUE DE SCÈNES</div>
+      <div class="uzzone" onclick="document.getElementById('vid-file').click()">
+        <input type="file" id="vid-file" accept="video/*" onchange="handleVidUpload(this)">
+        <div style="font-size:22px;margin-bottom:4px">🎞</div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--dim)" id="uzlabel-vid">Clique pour uploader la vidéo</div>
+      </div>
+      <div class="uprog" id="uprog-vid"><div class="uprog-bar" id="uprog-bar-vid" style="width:0%"></div></div>
+      <div style="margin-top:8px">
+        <div style="font-size:10px;letter-spacing:2px;color:var(--dim);margin-bottom:5px">PISTES AUDIO (optionnel)</div>
+        <div id="audio-tracks-list" style="display:flex;flex-direction:column;gap:5px"></div>
+        <button class="btn ba bsm bblock" onclick="addAudioTrack()" style="margin-top:5px">+ AJOUTER UNE PISTE</button>
+      </div>
+      <div class="uzzone mt" onclick="document.getElementById('sub-file').click()" style="padding:10px">
+        <input type="file" id="sub-file" accept=".srt,.vtt" onchange="handleSubUpload(this)">
+        <div style="font-size:16px;margin-bottom:3px">📄</div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--dim)" id="uzlabel-sub">Fichier .srt ou .vtt (bande rythmo)</div>
+      </div>
+      <div class="mt"><label>Titre de la scène</label><input type="text" id="scene-title" placeholder="Ex : Le Parrain — Bureau..."></div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--dim);margin-top:6px" id="chars-preview"></div>
+      <button class="btn bsolid-a bblock" id="save-btn" onclick="saveScene()" disabled>💾 ENREGISTRER LA SCÈNE</button>
+    </div>
+    <div class="panel">
+      <div class="ptitle">🎞 SCÈNES ENREGISTRÉES</div>
+      <div id="lib-list"><div style="font-size:11px;letter-spacing:2px;color:var(--dim);text-align:center;padding:14px">Bibliothèque vide</div></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">⚙ PARAMÈTRES</div>
+      <div class="g2">
+        <div>
+          <label>Tentatives max</label>
+          <input type="number" id="max-tries" value="3" min="1" max="10">
+          <div style="display:flex;gap:4px;margin-top:5px">
+            <button class="btn bsm ba" onclick="document.getElementById('max-tries').value=1">1</button>
+            <button class="btn bsm ba" onclick="document.getElementById('max-tries').value=3">3</button>
+            <button class="btn bsm ba" onclick="document.getElementById('max-tries').value=5">5</button>
+          </div>
+        </div>
+        <div>
+          <label>Mode</label>
+          <select id="game-mode" onchange="toggleOnlineFields()">
+            <option value="online">En ligne</option>
+            <option value="local">Même écran</option>
+          </select>
+        </div>
+      </div>
+      <div id="host-pseudo-wrap" class="mt">
+        <label>Ton pseudo (hôte)</label>
+        <input type="text" id="host-pseudo" placeholder="Ton nom..." maxlength="16">
+      </div>
+    </div>
+    <button class="btn bsolid-r bblock" onclick="startGame()" style="font-size:16px;padding:13px">🎙 CRÉER LA PARTIE</button>
+    <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+  </div>
+
+  <!-- JOIN -->
+  <div id="screen-join" class="screen">
+    <div class="panel">
+      <div class="ptitle">🔗 REJOINDRE</div>
+      <label>Code de la room</label>
+      <input type="text" id="join-code" placeholder="ex: A3KX" maxlength="6" style="text-transform:uppercase;letter-spacing:8px;font-size:20px;text-align:center" oninput="this.value=this.value.toUpperCase()">
+      <div style="border-top:1px solid var(--border);margin:10px 0"></div>
+      <label>Ton pseudo</label>
+      <input type="text" id="join-pseudo" placeholder="Ton nom..." maxlength="16">
+      <button class="btn bsolid-g bblock mt" onclick="joinRoom()">▶ REJOINDRE</button>
+      <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="screen-lobby" class="screen">
+    <div class="panel tc">
+      <div style="font-size:10px;letter-spacing:4px;color:var(--dim);margin-bottom:4px">CODE DE LA ROOM</div>
+      <div class="room-code" id="lobby-code">----</div>
+      <button class="btn ba bsm" onclick="copyLink()">📋 COPIER LE LIEN</button>
+    </div>
+    <div class="panel">
+      <div class="ptitle">👥 ACTEURS CONNECTÉS</div>
+      <div id="lobby-players"></div>
+    </div>
+    <button class="btn bsolid-a bblock" id="lobby-start" onclick="launchGame()" disabled style="font-size:16px;padding:13px">▶ LANCER LA SÉANCE</button>
+    <button class="btn br bblock" onclick="cancelLobby()" style="opacity:.5">✕ ANNULER</button>
+  </div>
+
+  <!-- WAITING (player) -->
+  <div id="screen-waiting" class="screen">
+    <div class="panel tc" style="padding:32px">
+      <div style="font-size:38px;margin-bottom:10px">🎙</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:4px;color:var(--green);margin-bottom:6px" id="wait-name">ACTEUR</div>
+      <div style="font-size:10px;letter-spacing:3px;color:var(--green);margin-bottom:16px">CONNECTÉ</div>
+      <div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DU RÉALISATEUR...</span></div>
+    </div>
+  </div>
+
+  <!-- VIDEO PICK (all players) -->
+  <div id="screen-pick" class="screen pick-screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px">
+      <div class="on-air">SÉLECTION</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;color:var(--dim)" id="pick-round-label"></div>
+    </div>
+    <div class="panel" style="padding:10px 12px">
+      <div class="ptitle">🎬 QUELLE SCÈNE ON DOUBLE ?</div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--dim);margin-bottom:10px" id="pick-hint">Vote pour tes préférées — l'hôte choisit et lance</div>
+      <div id="pick-list" class="pick-grid"></div>
+    </div>
+    <div id="pick-host-panel" style="display:none">
+      <button class="btn bsolid-a bblock" id="pick-launch-btn" onclick="hostLaunchScene()" disabled style="font-size:16px;padding:13px">🎬 LANCER CETTE SCÈNE</button>
+    </div>
+  </div>
+
+  <!-- CAST (host assigns roles) -->
+  <div id="screen-cast" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0">
+      <div class="on-air">DIRECTION</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--amber)" id="cast-scene-name"></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle a" style="margin-bottom:8px">🎤 MODE DE DOUBLAGE</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="dub-mode-btns">
+        <button class="btn bsolid-a bsm" id="dubmode-all" onclick="setDubMode('all')" style="flex:1">TOUS LES PERSOS</button>
+        <button class="btn ba bsm" id="dubmode-one" onclick="setDubMode('one')" style="flex:1">UN SEUL PERSO</button>
+      </div>
+      <div id="dub-char-pick" style="display:none;margin-top:8px">
+        <div style="font-size:10px;letter-spacing:2px;color:var(--dim);margin-bottom:5px">QUEL PERSONNAGE DOUBLER ?</div>
+        <div id="dub-char-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle a">🎭 ATTRIBUTION DES RÔLES</div>
+      <div id="cast-list"></div>
+    </div>
+    <div class="panel" style="padding:10px 12px">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--dim);margin-bottom:6px">ACTEURS DISPONIBLES</div>
+      <div id="cast-actors" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+    </div>
+    <button class="btn bsolid-a bblock" id="cast-go-btn" onclick="launchRecording()" disabled style="font-size:16px;padding:13px">🎙 ACTION !</button>
+  </div>
+
+  <!-- CAST WAIT (player sees their role) -->
+  <div id="screen-cast-wait" class="screen">
+    <div class="panel tc" style="padding:28px">
+      <div style="font-size:10px;letter-spacing:4px;color:var(--dim);margin-bottom:6px">TON RÔLE DANS</div>
+      <div style="font-size:11px;letter-spacing:3px;color:var(--dim);margin-bottom:10px" id="my-char-scene">---</div>
+      <div id="my-char-display" style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:6px;color:var(--amber);margin:10px 0">...</div>
+      <div class="wt mt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>LE RÉALISATEUR VA LANCER...</span></div>
+    </div>
+  </div>
+
+  <!-- WATCH SCREEN (doubleurs + spectateurs, fullscreen) -->
+  <div id="screen-watch" class="screen">
+    <!-- DOUBLEUR : 80% vidéo + 20% rythmo -->
+    <div id="watch-dubber" class="watch-wrap" style="display:none">
+      <div class="watch-video-area">
+        <video id="watch-video" playsinline style="width:100%;height:100%;object-fit:contain;display:block"></video>
+        <div class="watch-overlay">
+          <div class="on-air">ON AIR</div>
+          <div id="watch-char-badge" class="watch-char-badge">PERSONNAGE</div>
+        </div>
+        <!-- Hôte : bouton lancer -->
+        <div id="watch-host-ctrl" class="watch-ctrl">
+          <button class="watch-ctrl-btn" onclick="hostLaunchWatch()">▶ LANCER POUR TOUT LE MONDE</button>
+        </div>
+        <!-- Joueur : attente -->
+        <div id="watch-player-status" class="watch-status" style="display:none">EN ATTENTE DU RÉALISATEUR...</div>
+        <!-- Fin de vidéo -->
+        <div id="watch-end-overlay" class="watch-end-overlay">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:6px;color:var(--green)">SCÈNE TERMINÉE</div>
+          <div id="watch-end-host-btn" style="display:none">
+            <button class="watch-ctrl-btn" onclick="goPickAgain()">🎬 NOUVELLE SCÈNE</button>
+          </div>
+          <div style="font-size:11px;letter-spacing:2px;color:var(--dim)" id="watch-end-wait" style="display:none">En attente du réalisateur...</div>
+        </div>
+      </div>
+      <div class="watch-rythmo-area">
+        <div class="rythmo-wrap" id="rythmo-wrap" style="position:absolute;inset:0;border:none;border-radius:0">
+          <div class="rythmo-track" id="rythmo-track"></div>
+          <div class="rythmo-cursor"></div>
+        </div>
+      </div>
+    </div>
+    <!-- SPECTATEUR : 100% vidéo -->
+    <div id="watch-spectator" class="watch-fullvideo" style="display:none">
+      <video id="spectator-video" playsinline style="width:100%;height:100%;object-fit:contain;display:block"></video>
+      <div class="watch-overlay">
+        <div class="on-air">EN DIRECT</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;background:rgba(0,0,0,.6);color:var(--dim);padding:3px 10px;border-radius:2px">SPECTATEUR</div>
+      </div>
+      <!-- Hôte spectateur : bouton lancer centré -->
+      <div id="spectator-host-ctrl" class="watch-ctrl" style="bottom:48%;display:none">
+        <button class="watch-ctrl-btn" onclick="hostLaunchWatch()">▶ LANCER POUR TOUT LE MONDE</button>
+      </div>
+      <!-- Joueur spectateur : attente -->
+      <div id="spectator-player-status" class="watch-status" style="bottom:48%;display:none">EN ATTENTE DU RÉALISATEUR...</div>
+      <!-- Fin vidéo spectateur -->
+      <div id="spectator-end-overlay" class="watch-end-overlay">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:6px;color:var(--green)">SCÈNE TERMINÉE</div>
+        <div id="spectator-end-host-btn" style="display:none">
+          <button class="watch-ctrl-btn" onclick="goPickAgain()">🎬 NOUVELLE SCÈNE</button>
+        </div>
+        <div id="spectator-end-wait" style="font-size:11px;letter-spacing:2px;color:var(--dim);display:none">En attente du réalisateur...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECORDING (kept as stub, not used) -->
+  <div id="screen-recording" class="screen" style="display:none!important">
+    <div class="panel" style="padding:8px">
+      <div id="rec-ref-label"></div>
+      <video id="rec-video" style="display:none" playsinline></video>
+      <div id="rythmo-wrap-old" class="rythmo-wrap" style="display:none">
+        <div class="rythmo-track" id="rythmo-track-old"></div>
+        <div class="rythmo-cursor"></div>
+      </div>
+      <div id="preview-orig-btn" style="display:none"></div>
+      <div id="preview-me-btn" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="screen-done" class="screen">
+    <div class="panel tc" style="padding:32px">
+      <div style="font-size:42px;margin-bottom:10px">🎙</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:6px;color:var(--green);margin-bottom:6px">SCÈNE TERMINÉE</div>
+      <div style="font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:20px" id="done-scene-title">---</div>
+      <div id="done-cast" style="margin-bottom:20px"></div>
+      <button class="btn bsolid-a bblock" id="done-next-btn" onclick="goPickAgain()" style="font-size:16px;padding:13px">🎬 NOUVELLE SCÈNE</button>
+      <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5;margin-top:6px">← ACCUEIL</button>
+    </div>
+  </div>
+
+</div>
+<script type="module">
+// ══ FIREBASE ══
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import{getFirestore,doc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,collection,getDocs,serverTimestamp}
+  from'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+const FB={apiKey:"AIzaSyCSQAfoZJLimX281lx_Bq4TketSih5P4bk",authDomain:"freeze-game-1d557.firebaseapp.com",projectId:"freeze-game-1d557"};
+const app=initializeApp(FB,'dubgame2');
+const db=getFirestore(app);
+
+// ══ CLOUDINARY ══
+const CLOUD='dqubn08xt', PRESET='voicematch_preset';
+async function clUpload(blob,folder,onProg){
+  const fd=new FormData();
+  fd.append('file',blob);fd.append('upload_preset',PRESET);fd.append('folder',folder);
+  return new Promise((res,rej)=>{
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',`https://api.cloudinary.com/v1_1/${CLOUD}/auto/upload`);
+    xhr.upload.onprogress=e=>{if(e.lengthComputable&&onProg)onProg(e.loaded/e.total*100)};
+    xhr.onload=()=>{const r=JSON.parse(xhr.responseText);r.secure_url?res(r):rej(r)};
+    xhr.onerror=rej;xhr.send(fd);
+  });
+}
+
+// ══ CONSTANTS ══
+const AVATARS=['🎭','🎬','🎙','🎤','🎞','📽','🎦','🎼'];
+const COLORS=['#e5001a','#ffaa00','#00e57a','#4488ff','#ff55aa','#aa00ff','#00aaff','#ff8800'];
+// Password: "dubstudio"
+const PW_HASH='5c289000f2f7888bb6311489a2721679d0e23d4c3d3d8968d67e97b65b02bc46';
+
+// ══ STATE ══
+let lib=[];
+let gs={
+  mode:'online',maxTries:3,
+  players:[],       // [{id,name,avatar,color,score}]
+  isHost:false,myId:null,myData:null,
+  roomCode:null,
+  currentScene:null,// scene object from lib
+  cast:{},          // {charName:playerId}
+  recordings:{},    // {playerId:{url,charName,name,blob?}}
+  localRecIdx:0,
+  myChar:null,
+};
+let unsubRoom=null;
+
+// ══ HELPERS ══
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0)}
+window.showScreen=showScreen;
+let nTimer;
+function notif(msg,type=''){const el=document.getElementById('notif');el.textContent=msg;el.className='notif show'+(type?' '+type:'');clearTimeout(nTimer);nTimer=setTimeout(()=>el.classList.remove('show'),2800)}
+
+function secFmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return`${m}:${ss.toString().padStart(2,'0')}`}
+function rndCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+async function sha256(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
+
+// ══ PASSWORD ══
+let hostOk=sessionStorage.getItem('dub_ok')==='1';
+function goToHost(){if(hostOk){showScreen('screen-host');loadLib();return}document.getElementById('pw-input').value='';document.getElementById('pw-error').style.display='none';showScreen('screen-password')}
+window.goToHost=goToHost;
+async function checkPassword(){
+  const h=await sha256(document.getElementById('pw-input').value);
+  if(h===PW_HASH){hostOk=true;sessionStorage.setItem('dub_ok','1');document.getElementById('pw-error').style.display='none';showScreen('screen-host');loadLib()}
+  else{document.getElementById('pw-error').style.display='block';document.getElementById('pw-input').value='';document.getElementById('pw-input').focus()}
+}
+window.checkPassword=checkPassword;
+
+// ══ SRT/VTT PARSER ══
+function timeToSec(t){const p=t.replace(',','.').split(':');return p.length===3?+p[0]*3600+ +p[1]*60+parseFloat(p[2]):+p[0]*60+parseFloat(p[1])}
+function parseSRT(text){
+  const blocks=text.trim().replace(/\r\n/g,'\n').split(/\n\n+/);
+  return blocks.flatMap(block=>{
+    const lines=block.split('\n').filter(l=>l.trim());
+    let ti=0;if(/^\d+$/.test(lines[0]?.trim()))ti=1;
+    const tm=lines[ti]?.match(/(\d{1,2}:\d{2}:\d{2}[,\.]\d{3})\s*-->\s*(\d{1,2}:\d{2}:\d{2}[,\.]\d{3})/);
+    if(!tm)return[];
+    const raw=lines.slice(ti+1).join(' ').replace(/<[^>]+>/g,'').trim();
+    const cm=raw.match(/^([A-ZÀÂÉÈÊËÎÏÔÙÛÜ\- ]{2,20}):\s*(.+)/);
+    return[{start:timeToSec(tm[1]),end:timeToSec(tm[2]),text:cm?cm[2].trim():raw,char:cm?cm[1].trim():''}];
+  });
+}
+function parseVTT(text){return parseSRT(text.replace(/^WEBVTT[^\n]*\n/,''))}
+function extractChars(subs){return[...new Set(subs.map(s=>s.char).filter(Boolean))]}
+
+// ══ LIBRARY ══
+let pendingVid=null,pendingSubs=null,pendingAudioTracks=[]; // [{label,url}]
+
+async function loadLib(){
+  try{
+    const snap=await getDocs(collection(db,'dub_library'));
+    lib=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderLib();
+  }catch(e){console.error(e)}
+}
+
+function renderLib(){
+  const el=document.getElementById('lib-list');if(!el)return;
+  el.innerHTML=lib.length?lib.map(s=>`
+    <div style="background:#0d0d0d;border:1px solid var(--border);border-radius:2px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px">
+      <div style="flex:1">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px">${s.title||'Sans titre'}</div>
+        <div style="font-size:10px;letter-spacing:1px;color:var(--dim)">${(s.chars||[]).join(' · ')||'Aucun personnage'}</div>
+        ${(s.audioTracks||[]).length?`<div style="font-size:9px;letter-spacing:1px;color:#00e57a;margin-top:2px">🎵 ${s.audioTracks.map(t=>t.label).join(' · ')}</div>`:(s.audioURL?'<div style="font-size:9px;letter-spacing:1px;color:#00e57a;margin-top:2px">🎵 Bande son</div>':'')}
+      </div>
+      <button class="btn bsm br" onclick="deleteScene('${s.id}')">✕</button>
+    </div>`).join(''):'<div style="font-size:11px;letter-spacing:2px;color:var(--dim);text-align:center;padding:14px">Bibliothèque vide</div>';
+}
+
+window.handleVidUpload=async function(input){
+  const file=input.files[0];if(!file)return;
+  document.getElementById('uzlabel-vid').textContent=file.name;
+  document.getElementById('uprog-vid').classList.add('on');
+  try{
+    const r=await clUpload(file,'dub_videos',pct=>{document.getElementById('uprog-bar-vid').style.width=pct+'%'});
+    pendingVid={url:r.secure_url,thumbUrl:r.secure_url.replace('/upload/','/upload/w_480,q_60,f_jpg/')};
+    notif('Vidéo uploadée !','ok');checkSaveable();
+  }catch(e){notif('Erreur upload vidéo');console.error(e)}
+  document.getElementById('uprog-vid').classList.remove('on');
+};
+
+window.handleSubUpload=function(input){
+  const file=input.files[0];if(!file)return;
+  document.getElementById('uzlabel-sub').textContent=file.name;
+  const r=new FileReader();
+  r.onload=e=>{
+    const text=e.target.result;
+    const subs=file.name.endsWith('.vtt')?parseVTT(text):parseSRT(text);
+    pendingSubs=subs;
+    const chars=extractChars(subs);
+    document.getElementById('chars-preview').textContent=chars.length
+      ?`Personnages : ${chars.join(', ')}`
+      :`${subs.length} répliques — ajoute "NOM: texte" pour détecter les personnages`;
+    checkSaveable();
+  };
+  r.readAsText(file);
+};
+
+window.addAudioTrack=function(){
+  const idx=pendingAudioTracks.length;
+  pendingAudioTracks.push({label:'',url:null});
+  renderAudioTracksList();
+};
+
+function renderAudioTracksList(){
+  const el=document.getElementById('audio-tracks-list');if(!el)return;
+  el.innerHTML=pendingAudioTracks.map((t,i)=>`
+    <div style="background:#0d0d0d;border:1px solid var(--border);border-radius:2px;padding:6px 8px">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px">
+        <input type="text" placeholder="Label (ex: Sans voix / VADOR / LUKE)" value="${t.label}"
+          style="flex:1;font-size:11px;padding:5px 8px"
+          oninput="pendingAudioTracks[${i}].label=this.value">
+        <button class="btn bsm br" style="padding:3px 8px" onclick="removeAudioTrack(${i})">✕</button>
+      </div>
+      <div class="uzzone" onclick="document.getElementById('af-${i}').click()" style="padding:7px">
+        <input type="file" id="af-${i}" accept="audio/*" onchange="uploadAudioTrack(this,${i})" style="display:none">
+        <div style="font-size:10px;letter-spacing:1px;color:var(--dim)" id="af-label-${i}">${t.url?'✓ '+t.label:'Clique pour uploader'}</div>
+      </div>
+      <div class="uprog" id="af-prog-${i}"><div class="uprog-bar" id="af-bar-${i}" style="width:0%"></div></div>
+    </div>`).join('');
+}
+
+window.removeAudioTrack=function(i){
+  pendingAudioTracks.splice(i,1);
+  renderAudioTracksList();
+};
+
+window.uploadAudioTrack=async function(input,i){
+  const file=input.files[0];if(!file)return;
+  document.getElementById('af-prog-'+i)?.classList.add('on');
+  try{
+    const r=await clUpload(file,'dub_audio',pct=>{
+      const bar=document.getElementById('af-bar-'+i);if(bar)bar.style.width=pct+'%';
+    });
+    pendingAudioTracks[i].url=r.secure_url;
+    if(!pendingAudioTracks[i].label)pendingAudioTracks[i].label=file.name.replace(/\.[^.]+$/,'');
+    notif('Piste uploadée !','ok');
+    renderAudioTracksList();
+  }catch(e){notif('Erreur upload audio');console.error(e)}
+  document.getElementById('af-prog-'+i)?.classList.remove('on');
+};
+
+function checkSaveable(){document.getElementById('save-btn').disabled=!(pendingVid&&pendingSubs?.length)}
+
+window.saveScene=async function(){
+  const title=document.getElementById('scene-title').value.trim()||'Sans titre';
+  const chars=extractChars(pendingSubs);
+  const id='scene_'+Date.now();
+  const validTracks=pendingAudioTracks.filter(t=>t.url);
+  const data={title,videoURL:pendingVid.url,thumbURL:pendingVid.thumbUrl,
+    audioURL:validTracks.length?validTracks[0].url:null, // rétrocompatibilité
+    audioTracks:validTracks.length?validTracks:null,
+    subtitles:pendingSubs,chars,subCount:pendingSubs.length,createdAt:serverTimestamp()};
+  try{
+    await setDoc(doc(db,'dub_library',id),data);
+    lib.push({id,...data});renderLib();
+    pendingVid=null;pendingSubs=null;pendingAudio=null;
+    document.getElementById('uzlabel-vid').textContent='Clique pour uploader la vidéo';
+    pendingAudioTracks=[];renderAudioTracksList();
+    document.getElementById('uzlabel-sub').textContent='Fichier .srt ou .vtt (bande rythmo)';
+    document.getElementById('scene-title').value='';
+    document.getElementById('chars-preview').textContent='';
+    document.getElementById('save-btn').disabled=true;
+    notif('Scène enregistrée !','ok');
+  }catch(e){notif('Erreur Firebase');console.error(e)}
+};
+
+window.deleteScene=async function(id){
+  if(!confirm('Supprimer ?'))return;
+  await deleteDoc(doc(db,'dub_library',id)).catch(console.error);
+  lib=lib.filter(s=>s.id!==id);renderLib();
+};
+
+// ══ GAME START ══
+function toggleOnlineFields(){
+  const online=document.getElementById('game-mode').value==='online';
+  document.getElementById('host-pseudo-wrap').style.display=online?'block':'none';
+}
+window.toggleOnlineFields=toggleOnlineFields;
+
+window.startGame=async function(){
+  gs.mode=document.getElementById('game-mode').value;
+  gs.maxTries=Math.max(1,Math.min(10,parseInt(document.getElementById('max-tries').value)||3));
+  if(!lib.length){notif('Ajoute des scènes !');return}
+  if(gs.mode==='online'&&!document.getElementById('host-pseudo').value.trim()){notif('Entre ton pseudo !');return}
+  gs.players=[];gs.recordings={};gs.cast={};gs.currentScene=null;
+  if(gs.mode==='online') await startOnline();
+  else startLocal();
+};
+
+// ══ ONLINE — HOST SETUP ══
+async function startOnline(){
+  gs.isHost=true;
+  gs.roomCode=rndCode();
+  gs.myId='host_'+Date.now();
+  const name=document.getElementById('host-pseudo').value.trim();
+  gs.myData={name,avatar:AVATARS[0],color:COLORS[0],score:0,isHost:true};
+  try{
+    await setDoc(doc(db,'dub_rooms',gs.roomCode),{
+      status:'lobby',phase:'lobby',maxTries:gs.maxTries,
+      players:{[gs.myId]:gs.myData},
+      recordings:{},votes:{},cast:{},currentScene:null,
+      pickVotes:{},selectedSceneId:null,
+      createdAt:serverTimestamp()
+    });
+    document.getElementById('lobby-code').textContent=gs.roomCode;
+    renderLobbyPlayers({[gs.myId]:gs.myData});
+    showScreen('screen-lobby');
+    unsubRoom=onSnapshot(doc(db,'dub_rooms',gs.roomCode),snap=>{
+      const d=snap.data();if(!d)return;
+      renderLobbyPlayers(d.players||{});
+      const count=Object.keys(d.players||{}).length;
+      document.getElementById('lobby-start').disabled=count<2;
+    });
+  }catch(e){console.error(e);notif('Erreur Firebase')}
+}
+
+function renderLobbyPlayers(players){
+  document.getElementById('lobby-players').innerHTML=Object.values(players).map(p=>`
+    <div class="prow">
+      <div class="pdot ${p.isHost?'host':'ok'}"></div>
+      <div style="font-size:16px">${p.avatar}</div>
+      <span style="flex:1;font-size:13px;letter-spacing:2px">${p.name}${p.isHost?' · réalisateur':''}</span>
+    </div>`).join('')||'<div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>En attente...</span></div>';
+}
+
+window.launchGame=async function(){
+  if(unsubRoom){unsubRoom();unsubRoom=null}
+  const snap=await getDoc(doc(db,'dub_rooms',gs.roomCode));
+  const d=snap.data();
+  gs.players=Object.entries(d.players||{}).map(([id,p],i)=>({...p,id,score:0,avatar:p.avatar||AVATARS[i%8],color:p.color||COLORS[i%8]}));
+  gs.maxTries=d.maxTries||gs.maxTries;
+  await updateDoc(doc(db,'dub_rooms',gs.roomCode),{status:'playing',phase:'pick',pickVotes:{},selectedSceneId:null});
+  goToPick();
+};
+
+window.cancelLobby=async function(){
+  if(unsubRoom){unsubRoom();unsubRoom=null}
+  try{await deleteDoc(doc(db,'dub_rooms',gs.roomCode))}catch(e){}
+  showScreen('screen-host');
+};
+
+function copyLink(){
+  const l=`${location.origin}${location.pathname}?room=${gs.roomCode}`;
+  navigator.clipboard.writeText(l).then(()=>notif('Lien copié !','ok'));
+}
+window.copyLink=copyLink;
+
+// ══ ONLINE — JOIN ══
+window.joinRoom=async function(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  const pseudo=document.getElementById('join-pseudo').value.trim();
+  if(!code){notif('Entre un code !');return}
+  if(!pseudo){notif('Entre ton pseudo !');return}
+  try{
+    const snap=await getDoc(doc(db,'dub_rooms',code));
+    if(!snap.exists()){notif('Room introuvable !');return}
+    const d=snap.data();
+    if(d.status!=='lobby'){notif('Partie déjà lancée !');return}
+    gs.myId='player_'+Date.now();
+    const i=Object.keys(d.players||{}).length;
+    gs.myData={name:pseudo,avatar:AVATARS[i%8],color:COLORS[i%8],score:0,isHost:false};
+    gs.roomCode=code;gs.isHost=false;
+    gs.maxTries=d.maxTries||3;
+    await updateDoc(doc(db,'dub_rooms',code),{[`players.${gs.myId}`]:gs.myData});
+    document.getElementById('wait-name').textContent=pseudo.toUpperCase();
+    showScreen('screen-waiting');
+    listenAsPlayer(code,pseudo);
+  }catch(e){console.error(e);notif('Erreur connexion')}
+};
+
+// ══ VIDEO PICK SCREEN ══
+let selectedSceneId=null;
+let myPickVotes=new Set();
+
+function goToPick(){
+  document.body.classList.add('pickmode');
+  selectedSceneId=null;
+  document.getElementById('pick-host-panel').style.display=gs.isHost?'block':'none';
+  document.getElementById('pick-hint').textContent=gs.isHost
+    ?'Clique sur une scène pour la sélectionner, puis lance'
+    :'Vote pour tes préférées — l\'hôte choisit et lance';
+  document.getElementById('pick-launch-btn').disabled=true;
+  renderPickList({});
+  showScreen('screen-pick');
+  if(gs.isHost) watchPickVotes();
+}
+
+function renderPickList(pickVotes){
+  const el=document.getElementById('pick-list');
+  el.innerHTML=lib.map(scene=>{
+    const voters=Object.entries(pickVotes||{}).filter(([,sid])=>sid===scene.id).map(([pid])=>{
+      const p=gs.players.find(x=>x.id===pid);return p?p.name:'?';
+    });
+    const iSel=selectedSceneId===scene.id;
+    const iVoted=myPickVotes.has(scene.id);
+    const thumb=scene.thumbURL||scene.videoURL;
+    return`<div class="scene-card host-pick${iSel?' selected':''}" id="scard-${scene.id}" onclick="${gs.isHost?`hostSelectScene('${scene.id}')`:''}" >
+      <img class="sc-thumb" src="${thumb}" onerror="this.style.background='#111';this.style.display='block'" alt="${scene.title}">
+      <div class="sc-body">
+        <div class="sc-title">${scene.title||'Sans titre'}</div>
+        <div class="sc-chars">${(scene.chars||[]).join(' · ')||'Sous-titres sans personnages'} — ${scene.subCount||0} répliques</div>
+        <div class="sc-votes-row">
+          <button class="vote-btn${iVoted?' on':''}" onclick="event.stopPropagation();toggleVote('${scene.id}')">${iVoted?'✓ VOTÉ':'👍 JE VEUX CELLE-LÀ'}</button>
+          ${voters.map(v=>`<span class="vote-chip">${v}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.hostSelectScene=function(id){
+  selectedSceneId=id;
+  document.querySelectorAll('.scene-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('scard-'+id)?.classList.add('selected');
+  document.getElementById('pick-launch-btn').disabled=false;
+};
+
+window.toggleVote=async function(sceneId){
+  if(gs.mode==='local'){myPickVotes.has(sceneId)?myPickVotes.delete(sceneId):myPickVotes.add(sceneId);renderPickList({});return}
+  // online
+  const alreadyVoted=myPickVotes.has(sceneId);
+  if(alreadyVoted){
+    myPickVotes.delete(sceneId);
+    await updateDoc(doc(db,'dub_rooms',gs.roomCode),{[`pickVotes.${gs.myId}`]:null});
+  }else{
+    myPickVotes.add(sceneId);
+    await updateDoc(doc(db,'dub_rooms',gs.roomCode),{[`pickVotes.${gs.myId}`]:sceneId});
+  }
+};
+
+function watchPickVotes(){
+  if(unsubRoom){unsubRoom();unsubRoom=null}
+  unsubRoom=onSnapshot(doc(db,'dub_rooms',gs.roomCode),snap=>{
+    const d=snap.data();if(!d)return;
+    const pv=d.pickVotes||{};
+    renderPickList(pv);
+    // keep selected highlight
+    if(selectedSceneId) document.getElementById('scard-'+selectedSceneId)?.classList.add('selected');
+    if(d.phase==='cast'&&d.currentSceneId){
+      if(unsubRoom){unsubRoom();unsubRoom=null}
+      gs.currentScene=lib.find(s=>s.id===d.currentSceneId)||d.currentScene;
+      gs.players=Object.entries(d.players||{}).map(([id,p],i)=>({...p,id,score:0,avatar:p.avatar||AVATARS[i%8],color:p.color||COLORS[i%8]}));
+      showCastHost();
+    }
+  });
+}
+
+window.hostLaunchScene=async function(){
+  if(!selectedSceneId){notif('Sélectionne une scène !');return}
+  const scene=lib.find(s=>s.id===selectedSceneId);
+  if(!scene){notif('Scène introuvable');return}
+  gs.currentScene=scene;
+  await updateDoc(doc(db,'dub_rooms',gs.roomCode),{
+    phase:'cast',currentSceneId:selectedSceneId,currentScene:scene,
+    cast:{},recordings:{}
+  });
+  if(unsubRoom){unsubRoom();unsubRoom=null}
+  showCastHost();
+};
+
+// ══ CAST ══
+// Mode doublage : 'all' = tous les persos, 'one' = un seul
+let _dubMode='all';
+let _dubChar=null; // perso choisi en mode 'one'
+
+window.setDubMode=function(mode){
+  _dubMode=mode;
+  document.getElementById('dubmode-all').className='btn bsm '+(mode==='all'?'bsolid-a':'ba');
+  document.getElementById('dubmode-one').className='btn bsm '+(mode==='one'?'bsolid-a':'ba');
+  const onePanel=document.getElementById('dub-char-pick');
+  onePanel.style.display=mode==='one'?'block':'none';
+  if(mode==='all'){_dubChar=null}
+  renderCastList();
+  window.checkCast();
+};
+
+function renderDubCharPick(chars){
+  _dubChar=_dubChar||chars[0]||null;
+  document.getElementById('dub-char-list').innerHTML=chars.map(ch=>`
+    <button class="btn bsm ${ch===_dubChar?'bsolid-a':'ba'}" onclick="selectDubChar('${ch}')">${ch}</button>
+  `).join('');
+}
+
+window.selectDubChar=function(ch){
+  _dubChar=ch;
+  renderDubCharPick(gs.currentScene.chars||[]);
+  renderCastList();
+  window.checkCast();
+};
+
+function renderCastList(){
+  const scene=gs.currentScene;
+  const chars=scene.chars||[];
+  const allOpts=gs.players.map(p=>`<option value="${p.id}">${p.avatar} ${p.name}</option>`).join('');
+  // En mode 'one' : on n'affiche que le perso choisi dans le cast
+  const charsToAssign=_dubMode==='one'&&_dubChar?[_dubChar]:chars;
+  document.getElementById('cast-list').innerHTML=charsToAssign.length
+    ?charsToAssign.map(ch=>`
+      <div class="cast-row">
+        <div class="cast-char">${ch}</div>
+        <div style="flex:1"><select onchange="checkCast()"><option value="">— choisir —</option>${allOpts}</select></div>
+      </div>`).join('')
+    :'<div style="font-size:11px;letter-spacing:2px;color:var(--dim);text-align:center;padding:10px">Aucun personnage</div>';
+  // Persos non doublés affichés en info
+  if(_dubMode==='one'&&chars.length>1){
+    const kept=chars.filter(ch=>ch!==_dubChar);
+    const hasAudio=!!scene.audioURL;
+    document.getElementById('cast-list').innerHTML+=`
+      <div style="margin-top:8px;padding:6px 10px;background:#0d0d0d;border:1px solid var(--border);border-radius:2px;font-size:10px;letter-spacing:2px;color:var(--dim)">
+        ${kept.map(ch=>{
+          const track=resolveAudioTrack(scene,_dubMode,_dubChar);
+          return`<span style="color:#444">🔇 ${ch} — ${track?'piste : '+track.label:'son original'}</span>`;
+        }).join('<br>')}
+      </div>`;
+  }
+}
+
+function showCastHost(){
+  const scene=gs.currentScene;
+  document.getElementById('cast-scene-name').textContent=scene.title?.toUpperCase()||'';
+  const chars=scene.chars||[];
+  // Reset mode
+  _dubMode='all';_dubChar=chars[0]||null;
+  document.getElementById('dubmode-all').className='btn bsm bsolid-a';
+  document.getElementById('dubmode-one').className='btn bsm ba';
+  document.getElementById('dub-char-pick').style.display='none';
+  if(chars.length) renderDubCharPick(chars);
+  renderCastList();
+  document.getElementById('cast-actors').innerHTML=gs.players.map(p=>
+    `<div style="font-size:12px;padding:3px 8px;border:1px solid var(--border);border-radius:2px;color:var(--dim)">${p.avatar} ${p.name}</div>`).join('');
+  document.getElementById('cast-go-btn').disabled=chars.length>0;
+  showScreen('screen-cast');
+}
+
+window.checkCast=function(){
+  const chars=gs.currentScene.chars||[];
+  const charsToAssign=_dubMode==='one'&&_dubChar?[_dubChar]:chars;
+  const selects=document.getElementById('cast-list').querySelectorAll('select');
+  let ok=true;gs.cast={};
+  charsToAssign.forEach((ch,i)=>{const v=selects[i]?.value;if(!v)ok=false;else gs.cast[ch]=v});
+  document.getElementById('cast-go-btn').disabled=!ok&&charsToAssign.length>0;
+};
+
+window.launchRecording=async function(){
+  window.checkCast();
+  // Stocker le mode doublage dans gs pour setupWatchScreen
+  gs.dubMode=_dubMode||'all';
+  gs.dubChar=_dubChar||null;
+  if(gs.mode==='online'){
+    await updateDoc(doc(db,'dub_rooms',gs.roomCode),{phase:'watch',cast:gs.cast,dubMode:gs.dubMode,dubChar:gs.dubChar,watchPlayedAt:null});
+    const myChar=Object.entries(gs.cast).find(([,pid])=>pid===gs.myId)?.[0]||null;
+    gs.myChar=myChar;
+    setupWatchScreen(myChar,true);
+  }else{
+    const chars=gs.currentScene?.chars||[];
+    if(chars.length&&gs.players.length){
+      gs.cast={};chars.forEach((ch,i)=>{if(gs.players[i])gs.cast[ch]=gs.players[i].id});
+    }
+    const myChar=chars[0]||null;gs.myChar=myChar;
+    setupWatchScreen(myChar,true);
+  }
+};
+
+// ══ LOCAL RECORDING ══
+function startLocal(){goToPick()}
+
+
+// ══ RECORDING SCREEN ══
+let mediaRec=null,recStream=null,audioChunks=[],recordedBlob=null;
+let audioCtx=null,analyser=null,wfRaf=null,timerInt=null,isRec=false;
+
+
+
+// ══ WATCH SCREEN ══
+let watchRaf=null,watchDur=0;
+
+function setupWatchScreen(myChar,isHost){
+  const scene=gs.currentScene;
+  document.body.classList.add('fullscreen');
+  const dubber=document.getElementById('watch-dubber');
+  const spectator=document.getElementById('watch-spectator');
+  showScreen('screen-watch');
+
+  // Précharger la piste audio dès maintenant pour éviter le délai au play
+  const _track=resolveAudioTrack(scene,gs.dubMode||'all',gs.dubChar||null);
+  if(_track?.url){
+    if(window._watchAudio){window._watchAudio.pause();window._watchAudio=null}
+    if(window._watchAudioSpec){window._watchAudioSpec.pause();window._watchAudioSpec=null}
+    const preload=new Audio(_track.url);
+    preload.preload='auto';
+    preload.volume=1;
+    preload.load(); // force le chargement immédiat
+    if(myChar) window._watchAudio=preload;
+    else window._watchAudioSpec=preload;
+  }
+
+  if(myChar){
+    // Doubleur
+    dubber.style.display='flex';spectator.style.display='none';
+    document.getElementById('watch-char-badge').textContent=myChar;
+    const vid=document.getElementById('watch-video');
+    vid.src=scene.videoURL||'';
+    vid.muted=!!_track;
+    vid.currentTime=0;
+    watchDur=scene.subtitles?.length?(scene.subtitles[scene.subtitles.length-1].end+2):60;
+    // Forcer la hauteur du wrap avant buildRythmo pour que offsetHeight soit lisible
+    const rythmoWrap=document.getElementById('rythmo-wrap');
+    const rythmoArea=document.querySelector('.watch-rythmo-area');
+    if(rythmoArea&&rythmoWrap){
+      const areaH=rythmoArea.getBoundingClientRect().height||220;
+      rythmoWrap.style.height=areaH+'px';
+    }
+    buildRythmo('rythmo-track','rythmo-wrap',scene.subtitles||[],myChar,watchDur);
+    // RAF 60fps au lieu de ontimeupdate (~4fps) pour un scroll fluide
+    if(window._rythmoRaf){cancelAnimationFrame(window._rythmoRaf);window._rythmoRaf=null}
+    function rythmoLoop(){
+      if(!vid.paused&&!vid.ended)
+        updateRythmo('rythmo-track','rythmo-wrap',vid.currentTime,scene.subtitles||[],myChar);
+      window._rythmoRaf=requestAnimationFrame(rythmoLoop);
+    }
+    window._rythmoRaf=requestAnimationFrame(rythmoLoop);
+    vid.onended=()=>{
+      if(window._rythmoRaf){cancelAnimationFrame(window._rythmoRaf);window._rythmoRaf=null}
+      if(window._watchAudio){window._watchAudio.pause();window._watchAudio=null}
+      showWatchEnd(isHost);
+    };
+    // Host sees launch button, players see "en attente"
+    document.getElementById('watch-host-ctrl').className='watch-ctrl'+(isHost?' host-ctrl':'');
+    document.getElementById('watch-player-status').style.display=isHost?'none':'block';
+    document.getElementById('watch-end-overlay').classList.remove('on');
+  }else{
+    // Spectateur
+    dubber.style.display='none';spectator.style.display='block';
+    const sv=document.getElementById('spectator-video');
+    sv.src=scene.videoURL||'';
+    sv.muted=!!_track;
+    sv.currentTime=0;
+    sv.onended=()=>{
+      if(window._watchAudioSpec){window._watchAudioSpec.pause();window._watchAudioSpec=null}
+      const eo=document.getElementById('spectator-end-overlay');
+      eo.classList.add('on');
+      document.getElementById('spectator-end-host-btn').style.display=isHost?'block':'none';
+      document.getElementById('spectator-end-wait').style.display=isHost?'none':'block';
+    };
+    document.getElementById('spectator-end-overlay').classList.remove('on');
+    document.getElementById('spectator-host-ctrl').style.display=isHost?'block':'none';
+    document.getElementById('spectator-player-status').style.display=isHost?'none':'block';
+  }
+}
+
+// Timestamp du lancement pour resync
+let _watchPlayedAt=null;
+
+function syncWatchVideo(playedAt){
+  _watchPlayedAt=playedAt;
+  const elapsed=Math.max(0,(Date.now()-playedAt)/1000);
+  const scene=gs.currentScene;
+  const myChar=gs.myChar;
+
+  // Fonction utilitaire : jouer l'audio préchargé (ou en créer un nouveau si absent)
+  function playAudio(audioRef,trackUrl){
+    let a=audioRef;
+    if(!a||a.src!==trackUrl){
+      // Pas préchargé ou mauvaise URL — créer et jouer directement
+      a=new Audio(trackUrl);
+      a.volume=1;
+    }
+    a.currentTime=elapsed;
+    // Attendre que l'audio soit suffisamment chargé avant de jouer
+    if(a.readyState>=2){
+      a.play().catch(()=>{});
+    }else{
+      a.addEventListener('canplay',()=>a.play().catch(()=>{}),{once:true});
+    }
+    return a;
+  }
+
+  if(myChar){
+    const vid=document.getElementById('watch-video');
+    vid.currentTime=elapsed;
+    vid.play().catch(()=>{});
+    const resolvedTrack=resolveAudioTrack(scene,gs.dubMode||'all',gs.dubChar||null);
+    if(resolvedTrack?.url){
+      window._watchAudio=playAudio(window._watchAudio,resolvedTrack.url);
+    }
+    document.getElementById('watch-host-ctrl').className='watch-ctrl';
+    document.getElementById('watch-player-status').style.display='none';
+  }else{
+    document.getElementById('spectator-host-ctrl').style.display='none';
+    document.getElementById('spectator-player-status').style.display='none';
+    const sv=document.getElementById('spectator-video');
+    sv.currentTime=elapsed;sv.play().catch(()=>{});
+    const resolvedTrackSpec=resolveAudioTrack(scene,gs.dubMode||'all',gs.dubChar||null);
+    if(resolvedTrackSpec?.url){
+      window._watchAudioSpec=playAudio(window._watchAudioSpec,resolvedTrackSpec.url);
+    }
+  }
+}
+
+// Anti-pause : relancer la vidéo si elle se stoppe quand l'onglet passe en fond
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden||!_watchPlayedAt)return;
+  // L'onglet revient au premier plan : resync
+  const vid=document.getElementById('watch-video');
+  const sv=document.getElementById('spectator-video');
+  const scene=gs.currentScene;
+  const elapsed=Math.max(0,(Date.now()-_watchPlayedAt)/1000);
+  if(vid&&!vid.ended&&vid.paused&&vid.src){
+    vid.currentTime=elapsed;vid.play().catch(()=>{});
+    if(window._watchAudio){window._watchAudio.currentTime=elapsed;window._watchAudio.play().catch(()=>{})}
+  }
+  if(sv&&!sv.ended&&sv.paused&&sv.src){
+    sv.currentTime=elapsed;sv.play().catch(()=>{});
+    if(window._watchAudioSpec){window._watchAudioSpec.currentTime=elapsed;window._watchAudioSpec.play().catch(()=>{})}
+  }
+});
+
+function showWatchEnd(isHost){
+  const overlay=document.getElementById('watch-end-overlay');
+  overlay.classList.add('on');
+  document.getElementById('watch-end-host-btn').style.display=isHost?'block':'none';
+  document.getElementById('watch-end-wait').style.display=isHost?'none':'block';
+}
+
+function body_normalscreen(){
+  document.body.classList.remove('fullscreen');
+  document.body.classList.remove('pickmode');
+  if(window._rythmoRaf){cancelAnimationFrame(window._rythmoRaf);window._rythmoRaf=null}
+}
+
+// Résout quelle piste audio utiliser selon le mode de doublage
+// Mode 'all' → piste "sans voix" (premier track ou label lowercase contient 'sans')
+// Mode 'one' → piste dont le label correspond au perso NON doublé
+//              (si on double VADOR, on veut la piste avec la voix de LUKE, et vice-versa)
+function resolveAudioTrack(scene,dubMode,dubChar){
+  const tracks=scene?.audioTracks;
+  // Rétrocompat : ancienne scène avec audioURL simple
+  if(!tracks||!tracks.length){
+    return scene?.audioURL?{label:'Bande son',url:scene.audioURL}:null;
+  }
+  if(dubMode==='all'||!dubChar){
+    // Tous les persos → piste "sans voix" (aucune voix originale)
+    return tracks.find(t=>t.label.toLowerCase().includes('sans')||t.label.toLowerCase().includes('voix'))||tracks[0];
+  }else{
+    // Mode "un seul perso" : on double dubChar
+    // Convention : la piste est nommée d'après le perso dont on GARDE la voix
+    // Ex: doubler VADOR → on cherche la piste "LUKE" (Luke garde sa voix, Vador est doublé)
+    const chars=scene?.chars||[];
+    const others=chars.filter(ch=>ch!==dubChar);
+    for(const other of others){
+      const t=tracks.find(t=>t.label.toLowerCase().includes(other.toLowerCase()));
+      if(t)return t;
+    }
+    // Fallback : piste qui n'est pas "sans voix" et pas le perso doublé
+    return tracks.find(t=>!t.label.toLowerCase().includes('sans')&&!t.label.toLowerCase().includes(dubChar.toLowerCase()))||tracks[0];
+  }
+}
+
+window.hostLaunchWatch=async function(){
+  const ts=Date.now();
+  await updateDoc(doc(db,'dub_rooms',gs.roomCode),{watchPlayedAt:ts});
+  syncWatchVideo(ts);
+};
+
+// Timer
+function startTimer(){clearInterval(timerInt);const t0=Date.now();const el=document.getElementById('rec-timer');timerInt=setInterval(()=>{el.textContent=secFmt((Date.now()-t0)/1000)},200)}
+function stopTimer(){clearInterval(timerInt)}
+
+// Live waveform
+function startLiveWF(){
+  const canvas=document.getElementById('wf-canvas');
+  canvas.width=canvas.offsetWidth||300;canvas.height=44;
+  const ctx=canvas.getContext('2d');
+  const buf=new Uint8Array(analyser.frequencyBinCount);
+  function draw(){wfRaf=requestAnimationFrame(draw);analyser.getByteTimeDomainData(buf);ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createLinearGradient(0,0,canvas.width,0);g.addColorStop(0,'#e5001a');g.addColorStop(.5,'#ffaa00');g.addColorStop(1,'#e5001a');ctx.strokeStyle=g;ctx.lineWidth=2;ctx.beginPath();const sw=canvas.width/buf.length;let x=0;buf.forEach((v,i)=>{const y=(v/128)*canvas.height/2;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);x+=sw});ctx.lineTo(canvas.width,canvas.height/2);ctx.stroke()}
+  draw();
+}
+function stopLiveWF(){cancelAnimationFrame(wfRaf)}
+
+async function drawStaticWF(blob,canvasId){
+  const canvas=document.getElementById(canvasId);if(!canvas)return;
+  canvas.width=canvas.offsetWidth||300;canvas.height=44;
+  const ctx=canvas.getContext('2d');
+  try{
+    const ab=await blob.arrayBuffer();
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const ab2=await ac.decodeAudioData(ab);
+    const data=ab2.getChannelData(0);
+    const step=Math.ceil(data.length/canvas.width);
+    const amp=canvas.height/2;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const g=ctx.createLinearGradient(0,0,canvas.width,0);g.addColorStop(0,'#2233bb');g.addColorStop(.5,'#4455ff');g.addColorStop(1,'#2233bb');
+    ctx.beginPath();ctx.moveTo(0,amp);
+    for(let i=0;i<canvas.width;i++){let mn=1,mx=-1;for(let j=0;j<step;j++){const d=data[i*step+j]||0;if(d<mn)mn=d;if(d>mx)mx=d}ctx.lineTo(i,amp+mn*amp*.9)}
+    for(let i=canvas.width-1;i>=0;i--){let mx=-1;for(let j=0;j<step;j++){const d=data[i*step+j]||0;if(d>mx)mx=d}ctx.lineTo(i,amp-mx*amp*.9)}
+    ctx.closePath();ctx.fillStyle=g;ctx.fill();ac.close();
+  }catch(e){console.warn(e)}
+}
+
+// ══ BANDE RYTHMO MULTI-LIGNES ══
+// PPS = pixels par seconde — vitesse de défilement
+const PPS=400;
+const LABEL_W=100; // largeur label gauche — NE PAS MODIFIER (affecte vitesse perçue)
+
+function buildRythmo(trackId,wrapId,subs,myChar,dur){
+  const track=document.getElementById(trackId);
+  const wrap=document.getElementById(wrapId);
+  if(!track||!wrap)return;
+  track.innerHTML='';
+
+  const allChars=[...new Set(subs.map(s=>s.char).filter(Boolean))];
+  const rows=allChars.length?allChars:[''];
+  const n=rows.length;
+
+  // Hauteur : lire directement l'aire parente fullscreen
+  const wrapH=wrap.offsetHeight||wrap.parentElement?.offsetHeight||Math.max(100,n*60);
+  const usableH=wrapH*0.8;
+  const marginTop=wrapH*0.1;
+  const ROW_H=Math.max(32,Math.min(120,usableH/n));
+
+  // Font en vw pour s'adapter à l'écran (1vw ≈ 1% de la largeur viewport)
+  // Clamped entre 1vw et 2.5vw selon la hauteur de ligne
+  const fvw=Math.max(0.8,Math.min(2.2,ROW_H/window.innerHeight*100*0.55));
+  const fsStr=`clamp(11px, ${fvw}vw, 28px)`;
+
+  wrap.style.height=wrapH+'px';
+  track.style.cssText=`width:${LABEL_W+dur*PPS}px;position:absolute;top:0;left:0;bottom:0`;
+
+  rows.forEach((char,rowIdx)=>{
+    const isMine=char===myChar;
+    const row=document.createElement('div');
+    row.style.cssText=`top:${marginTop+rowIdx*ROW_H}px;height:${ROW_H}px;position:absolute;left:0;right:0;overflow:hidden`;
+
+    // Label fixe
+    const label=document.createElement('div');
+    label.className='rythmo-row-label '+(isMine?'mine':'other');
+    label.style.cssText=`width:${LABEL_W}px;font-size:clamp(9px,${fvw*0.8}vw,16px);letter-spacing:1px`;
+    label.textContent=char||'—';
+    row.appendChild(label);
+
+    // Segments : chaque segment est une fenêtre clippée sur sa durée exacte
+    // Le texte scroll horizontalement à l'intérieur du segment en suivant le curseur
+    subs.filter(s=>(s.char||'')===(char||'')).forEach(s=>{
+      const segW=Math.max(2,(s.end-s.start)*PPS);
+      const seg=document.createElement('div');
+      seg.className='rythmo-seg '+(isMine?'mine':'other');
+      seg.style.cssText=`left:${LABEL_W+s.start*PPS}px;width:${segW}px;top:0;height:100%;`+
+        `position:absolute;overflow:hidden`;
+      seg.dataset.start=s.start;seg.dataset.end=s.end;
+      seg.dataset.segw=segW;
+      // Span : texte en nowrap, déplacé dynamiquement dans updateRythmo
+      const span=document.createElement('span');
+      span.style.cssText=`position:absolute;top:0;bottom:0;left:0;display:flex;align-items:center;`+
+        `white-space:nowrap;font-size:${fsStr};padding:0 8px;will-change:transform;letter-spacing:0.25em`;
+      span.textContent=s.text;
+      seg.appendChild(span);
+      row.appendChild(seg);
+    });
+    track.appendChild(row);
+  });
+}
+
+function updateRythmo(trackId,wrapId,t,subs,myChar){
+  const track=document.getElementById(trackId);
+  const wrap=document.getElementById(wrapId);if(!track||!wrap)return;
+  const wrapW=wrap.offsetWidth;
+  if(!wrapW)return;
+
+  const offset=LABEL_W+t*PPS-wrapW/2;
+  track.style.transform=`translateX(${-offset}px)`;
+
+  track.querySelectorAll('.rythmo-seg').forEach(seg=>{
+    const s=parseFloat(seg.dataset.start),e=parseFloat(seg.dataset.end);
+    const isActive=t>=s&&t<e;
+    seg.classList.toggle('active',isActive);
+
+    const span=seg.firstChild;
+    if(!span)return;
+    const segW=parseFloat(seg.dataset.segw)||seg.offsetWidth||1;
+    const textW=span.offsetWidth;
+    if(!textW)return;
+
+    // Seuil : on ne scroll que si le texte dépasse vraiment (avec 20px de marge)
+    if(textW<=segW-20){
+      span.style.transform='translateX(0)';
+    }else if(textW<=segW){
+      // Centrer le texte dans le segment
+      span.style.transform=`translateX(${(segW-textW)/2}px)`;
+    }else{
+      // Texte plus large : scroll pour suivre le curseur
+      const cursorInSeg=(t-s)*PPS;
+      const ideal=-(cursorInSeg-segW/2);
+      const clamped=Math.max(-(textW-segW+20),Math.min(16,ideal));
+      span.style.transform=`translateX(${clamped}px)`;
+    }
+  });
+}
+
+
+
+
+async function publishReplay(){
+  await updateDoc(doc(db,'dub_rooms',gs.roomCode),{phase:'done'});
+  showDoneScreen();
+}
+
+function showDoneScreen(){body_normalscreen();
+  const scene=gs.currentScene;
+  document.getElementById('done-scene-title').textContent=scene?.title?.toUpperCase()||'';
+  document.getElementById('done-cast').innerHTML=Object.entries(gs.cast||{}).map(([ch,pid])=>{
+    const p=gs.players.find(x=>x.id===pid);
+    return`<div class="prow"><span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--amber);min-width:80px">${ch}</span><span style="font-size:15px">${p?.avatar||''}</span><span style="font-size:13px;letter-spacing:2px">${p?.name||''}</span></div>`;
+  }).join('');
+  // Only host sees "nouvelle scène"
+  document.getElementById('done-next-btn').style.display=gs.isHost?'block':'none';
+  showScreen('screen-done');
+}
+
+// ══ PLAYER LISTENER ══
+function listenAsPlayer(code,pseudo){
+  let lastPhase='',lastReplayAt=null;
+  unsubRoom=onSnapshot(doc(db,'dub_rooms',code),snap=>{
+    const d=snap.data();if(!d)return;
+    if(d.players)gs.players=Object.entries(d.players).map(([id,p],i)=>({...p,id,score:0,avatar:p.avatar||AVATARS[i%8],color:p.color||COLORS[i%8]}));
+
+    // PICK
+    if(d.phase==='pick'&&lastPhase!=='pick'){
+      lastPhase='pick';myPickVotes=new Set();
+      document.getElementById('pick-host-panel').style.display='none';
+      document.getElementById('pick-hint').textContent="Vote pour tes pr\u00e9f\u00e9r\u00e9es \u2014 l'h\u00f4te choisit et lance";
+      body_normalscreen();
+      const showPick=()=>{document.body.classList.add('pickmode');renderPickList(d.pickVotes||{});showScreen('screen-pick')};
+      if(!lib.length)getDocs(collection(db,'dub_library')).then(snap=>{lib=snap.docs.map(x=>({id:x.id,...x.data()}));showPick()});
+      else showPick();
+      if(unsubRoom){unsubRoom();unsubRoom=null}
+      unsubRoom=onSnapshot(doc(db,'dub_rooms',code),s2=>{
+        const d2=s2.data();if(!d2)return;
+        if(d2.phase==='pick')renderPickList(d2.pickVotes||{});
+        if(d2.phase==='cast'&&lastPhase!=='cast'){
+          lastPhase='cast';
+          if(unsubRoom){unsubRoom();unsubRoom=null}
+          gs.currentScene=lib.find(s=>s.id===d2.currentSceneId)||d2.currentScene;
+          gs.cast=d2.cast||{};
+          const myChar=Object.entries(d2.cast||{}).find(([,pid])=>pid===gs.myId)?.[0]||'';
+          document.getElementById('my-char-display').textContent=myChar||'SPECTATEUR';
+          document.getElementById('my-char-scene').textContent=gs.currentScene?.title?.toUpperCase()||'';
+          showScreen('screen-cast-wait');
+          listenAsPlayer2(code,pseudo);
+        }
+      });
+    }
+
+        // CAST (if joining mid-game)
+    if(d.phase==='cast'&&lastPhase!=='cast'&&lastPhase!=='pick'){
+      lastPhase='cast';
+      if(unsubRoom){unsubRoom();unsubRoom=null}
+      gs.currentScene=lib.find(s=>s.id===d.currentSceneId)||d.currentScene;
+      gs.cast=d.cast||{};
+      const myChar=Object.entries(d.cast||{}).find(([,pid])=>pid===gs.myId)?.[0]||'';
+      document.getElementById('my-char-display').textContent=myChar||'SPECTATEUR';
+      document.getElementById('my-char-scene').textContent=gs.currentScene?.title?.toUpperCase()||'';
+      showScreen('screen-cast-wait');
+      listenAsPlayer2(code,pseudo);
+    }
+  });
+}
+
+function listenAsPlayer2(code,pseudo){
+  let lastPhase2='',lastWatchAt=null;
+  unsubRoom=onSnapshot(doc(db,'dub_rooms',code),snap=>{
+    const d=snap.data();if(!d)return;
+    if(d.players)gs.players=Object.entries(d.players).map(([id,p],i)=>({...p,id,score:0,avatar:p.avatar||AVATARS[i%8],color:p.color||COLORS[i%8]}));
+
+    // Update cast wait char
+    if(d.phase==='cast'){
+      const myChar=Object.entries(d.cast||{}).find(([,pid])=>pid===gs.myId)?.[0]||'...';
+      document.getElementById('my-char-display').textContent=myChar;
+    }
+
+    // WATCH (video sync)
+    if(d.phase==='watch'&&lastPhase2!=='watch'){
+      lastPhase2='watch';
+      gs.cast=d.cast||{};
+      gs.dubMode=d.dubMode||'all';gs.dubChar=d.dubChar||null;
+      gs.currentScene=lib.find(s=>s.id===d.currentSceneId)||d.currentScene||gs.currentScene;
+      const myChar=Object.entries(gs.cast).find(([,pid])=>pid===gs.myId)?.[0]||null;
+      gs.myChar=myChar;
+      setupWatchScreen(myChar,false);
+      // Sync if already started
+      if(d.watchPlayedAt) syncWatchVideo(d.watchPlayedAt);
+    }
+    // Sync watch playback
+    if(d.phase==='watch'&&d.watchPlayedAt&&d.watchPlayedAt!==lastWatchAt){
+      lastWatchAt=d.watchPlayedAt;
+      syncWatchVideo(d.watchPlayedAt);
+    }
+
+    // DONE
+    if(d.phase==='done'&&lastPhase2!=='done'){
+      lastPhase2='done';
+      gs.cast=d.cast||{};
+      gs.currentScene=lib.find(s=>s.id===d.currentSceneId)||d.currentScene||gs.currentScene;
+      showDoneScreen();
+    }
+
+    // PICK again (nouvelle scène)
+    if(d.phase==='pick'&&(lastPhase2==='watch'||lastPhase2==='done')){
+      lastPhase2='pick';myPickVotes=new Set();
+      document.getElementById('pick-host-panel').style.display='none';
+      document.getElementById('pick-hint').textContent="Vote pour tes préférées — l'hôte choisit et lance";
+      body_normalscreen();
+      document.body.classList.add('pickmode');
+      renderPickList(d.pickVotes||{});
+      showScreen('screen-pick');
+    }
+    });
+}
+
+
+// ══ NOUVELLE SCÈNE ══
+window.goPickAgain=async function(){
+  body_normalscreen();
+  if(gs.mode==='online'){
+    if(gs.isHost){
+      await updateDoc(doc(db,'dub_rooms',gs.roomCode),{phase:'pick',pickVotes:{},selectedSceneId:null,currentScene:null,cast:{},watchPlayedAt:null});
+      if(unsubRoom){unsubRoom();unsubRoom=null}
+      selectedSceneId=null;myPickVotes=new Set();
+      goToPick();
+    }
+  }else{
+    gs.cast={};selectedSceneId=null;myPickVotes=new Set();goToPick();
+  }
+};
+
+
+
+// ══ URL PARAM ══
+const urlRoom=new URL(location.href).searchParams.get('room');
+if(urlRoom){document.getElementById('join-code').value=urlRoom.toUpperCase();showScreen('screen-join')}
+</script>
+</body>
+</html>
