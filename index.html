@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GAME NIGHT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0a0a0a;
+  --surface:#111111;
+  --border:#1e1e1e;
+  --border-hover:#2e2e2e;
+  --text:#e8e8e8;
+  --dim:#555;
+  --amber:#f5c518;
+  --amber-dim:#b8941a;
+}
+
+html,body{
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Mono',monospace;
+  overflow-x:hidden;
+}
+
+/* Grain overlay */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
+}
+
+.page{
+  position:relative;z-index:1;
+  max-width:680px;
+  margin:0 auto;
+  padding:80px 24px 60px;
+}
+
+/* HEADER */
+header{
+  margin-bottom:72px;
+}
+
+.logo-line{
+  display:flex;align-items:baseline;gap:16px;
+  margin-bottom:8px;
+}
+
+.logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:52px;
+  letter-spacing:6px;
+  color:var(--text);
+  line-height:1;
+}
+
+.logo-dot{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--amber);
+  flex-shrink:0;
+  margin-bottom:6px;
+}
+
+.tagline{
+  font-size:10px;
+  letter-spacing:4px;
+  color:var(--dim);
+  text-transform:uppercase;
+}
+
+/* DIVIDER */
+.divider{
+  width:32px;height:1px;
+  background:var(--border-hover);
+  margin:32px 0;
+}
+
+/* SECTION LABEL */
+.section-label{
+  font-size:9px;
+  letter-spacing:4px;
+  color:var(--dim);
+  text-transform:uppercase;
+  margin-bottom:20px;
+}
+
+/* GAME CARDS */
+.games{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.game-card{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:20px 24px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  text-decoration:none;
+  color:inherit;
+  transition:border-color .2s, background .2s;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+}
+
+.game-card::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:2px;
+  background:var(--amber);
+  transform:scaleY(0);
+  transform-origin:bottom;
+  transition:transform .25s ease;
+}
+
+.game-card:hover{
+  border-color:var(--border-hover);
+  background:#141414;
+}
+
+.game-card:hover::before{
+  transform:scaleY(1);
+}
+
+.game-card:hover .card-arrow{
+  transform:translateX(4px);
+  color:var(--amber);
+}
+
+.card-icon{
+  font-size:24px;
+  flex-shrink:0;
+  width:32px;
+  text-align:center;
+}
+
+.card-body{
+  flex:1;
+  min-width:0;
+}
+
+.card-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px;
+  letter-spacing:3px;
+  color:var(--text);
+  line-height:1;
+  margin-bottom:5px;
+}
+
+.card-desc{
+  font-size:10px;
+  letter-spacing:1px;
+  color:var(--dim);
+  line-height:1.5;
+}
+
+.card-badge{
+  font-size:8px;
+  letter-spacing:2px;
+  color:var(--amber-dim);
+  border:1px solid var(--amber-dim);
+  padding:2px 6px;
+  flex-shrink:0;
+  opacity:.7;
+}
+
+.card-arrow{
+  font-size:14px;
+  color:var(--dim);
+  flex-shrink:0;
+  transition:transform .2s,color .2s;
+}
+
+/* FOOTER */
+footer{
+  margin-top:72px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.footer-line{
+  flex:1;height:1px;
+  background:var(--border);
+}
+
+.footer-text{
+  font-size:9px;
+  letter-spacing:3px;
+  color:var(--border-hover);
+  white-space:nowrap;
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+header{animation:fadeUp .5s ease both}
+.section-label{animation:fadeUp .5s .1s ease both}
+.game-card:nth-child(1){animation:fadeUp .5s .15s ease both}
+.game-card:nth-child(2){animation:fadeUp .5s .22s ease both}
+.game-card:nth-child(3){animation:fadeUp .5s .29s ease both}
+.game-card:nth-child(4){animation:fadeUp .5s .36s ease both}
+footer{animation:fadeUp .5s .45s ease both}
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo-line">
+      <span class="logo">GAME NIGHT</span>
+      <div class="logo-dot"></div>
+    </div>
+    <div class="tagline">Collection de jeux multijoueurs</div>
+  </header>
+
+  <div class="section-label">Choisir un jeu</div>
+
+  <div class="games">
+
+    <a class="game-card" href="pixelguess.html">
+      <div class="card-icon">🎬</div>
+      <div class="card-body">
+        <div class="card-name">PIXEL GUESS</div>
+        <div class="card-desc">Identifiez le film ou la série depuis une affiche pixelisée — buzzez avant les autres</div>
+      </div>
+      <div class="card-badge">MULTIJOUEUR</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="game-card" href="freeze-v4.html">
+      <div class="card-icon">🧊</div>
+      <div class="card-body">
+        <div class="card-name">FREEZE !</div>
+        <div class="card-desc">Chaque joueur gèle sur une pose au signal — le plus drôle remporte la manche</div>
+      </div>
+      <div class="card-badge">MULTIJOUEUR</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="game-card" href="voicematch.html">
+      <div class="card-icon">🎙</div>
+      <div class="card-body">
+        <div class="card-name">VOICEMATCH</div>
+        <div class="card-desc">Imitez une voix ou un personnage — les autres joueurs tentent de vous identifier</div>
+      </div>
+      <div class="card-badge">MULTIJOUEUR</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <a class="game-card" href="dubgame.html">
+      <div class="card-icon">🎭</div>
+      <div class="card-body">
+        <div class="card-name">DUB STUDIO</div>
+        <div class="card-desc">Doublez des scènes culte en direct — synchronisation, bande rythmo et tout le reste</div>
+      </div>
+      <div class="card-badge">MULTIJOUEUR</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+  </div>
+
+  <footer>
+    <div class="footer-line"></div>
+    <div class="footer-text">GAME NIGHT · 2025</div>
+    <div class="footer-line"></div>
+  </footer>
+
+</div>
+</body>
+</html>
