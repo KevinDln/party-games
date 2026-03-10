@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIXEL GUESS</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;
+  --panel:#111;
+  --panel2:#161616;
+  --border:#222;
+  --amber:#ffcc00;
+  --red:#ff2244;
+  --green:#00ff88;
+  --blue:#4488ff;
+  --dim:#444;
+  --text:#eee;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;overflow-x:hidden}
+
+/* HINT PULSE */
+@keyframes hintpulse{0%{box-shadow:0 0 0 0 rgba(255,204,0,.4)}70%{box-shadow:0 0 0 8px rgba(255,204,0,0)}100%{box-shadow:0 0 0 0 rgba(255,204,0,0)}}
+#hint-zone .hint-inner{animation:hintpulse 1s ease-out}
+
+/* SCANLINE OVERLAY */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999}
+
+.app{max-width:520px;margin:0 auto;padding:14px 14px 50px;min-height:100vh}
+body.pickmode .app, body.fullscreen .app{max-width:100%;padding:0}
+
+/* SCREENS */
+.screen{display:none}
+.screen.on{display:block}
+#screen-game.on{
+  display:flex!important;
+  flex-direction:column;
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  z-index:100;
+  background:var(--bg);
+  overflow:hidden;
+}
+#screen-game .game-body{
+  display:flex;
+  flex:1;
+  min-height:0;
+  position:relative;
+  justify-content:center;
+  align-items:stretch;
+}
+.img-container{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  background:#000;
+  min-height:0;
+  flex:1;
+}
+
+/* NOTIF */
+.notif{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--panel2);border:1px solid var(--border);padding:10px 20px;font-size:11px;letter-spacing:3px;z-index:10000;transition:transform .3s;white-space:nowrap;border-radius:2px}
+.notif.show{transform:translateX(-50%) translateY(0)}
+.notif.ok{border-color:var(--green);color:var(--green)}
+.notif.err{border-color:var(--red);color:var(--red)}
+
+/* TYPOGRAPHY */
+.logo{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;color:var(--amber);text-shadow:0 0 40px rgba(255,204,0,.3);line-height:1}
+.subtitle{font-size:10px;letter-spacing:4px;color:var(--dim);margin-top:4px}
+.ptitle{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--amber);margin-bottom:10px}
+
+/* PANELS */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:2px;padding:14px;margin-bottom:10px}
+
+/* BUTTONS */
+.btn{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;padding:10px 16px;border:none;cursor:pointer;border-radius:2px;transition:all .15s;text-transform:uppercase;display:inline-block}
+.btn:disabled{opacity:.3;cursor:default}
+.bsolid-a{background:var(--amber);color:#000}
+.bsolid-a:not(:disabled):hover{background:#fff;color:#000}
+.bsolid-r{background:var(--red);color:#fff}
+.bsolid-r:not(:disabled):hover{background:#ff5566}
+.bsolid-g{background:var(--green);color:#000}
+.bsolid-g:not(:disabled):hover{background:#88ffcc}
+.ba{background:transparent;color:var(--amber);border:1px solid var(--amber)}
+.ba:not(:disabled):hover{background:rgba(255,204,0,.1)}
+.br{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.br:not(:disabled):hover{border-color:#444;color:var(--text)}
+.bblock{display:block;width:100%;text-align:center;margin-top:8px}
+.bsm{font-size:10px;padding:6px 12px;letter-spacing:2px}
+
+/* INPUTS */
+input[type=text],input[type=number]{width:100%;background:#0d0d0d;border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:13px;padding:9px 12px;border-radius:2px;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--amber)}
+label{font-size:10px;letter-spacing:2px;color:var(--dim);display:block;margin-bottom:4px;margin-top:10px}
+
+/* HOME */
+.home-hero{text-align:center;padding:40px 0 30px}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+
+/* LOBBY */
+.room-code{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:12px;color:var(--amber);text-align:center;padding:10px 0}
+.player-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel2);border:1px solid var(--border);border-radius:2px;margin-bottom:5px}
+.player-chip .av{font-size:20px}
+.player-chip .nm{font-size:12px;letter-spacing:2px;flex:1}
+.player-chip .sc{font-size:11px;color:var(--amber);letter-spacing:1px}
+.host-badge{font-size:9px;letter-spacing:2px;color:var(--amber);border:1px solid var(--amber);padding:2px 5px;border-radius:2px}
+
+/* GAME SCREEN */
+#screen-game{background:var(--bg)}
+.game-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.game-round{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--dim)}
+.game-timer-wrap{display:flex;align-items:center;gap:8px}
+.game-timer{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--amber);min-width:40px;text-align:right}
+.game-timer.urgent{color:var(--red);animation:pulse .5s infinite alternate}
+@keyframes pulse{from{opacity:1}to{opacity:.4}}
+
+/* IMAGE CONTAINER */
+.img-container{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#000;min-height:0}
+.pixel-img{
+  width:100%;height:100%;object-fit:contain;
+  image-rendering:pixelated;
+  image-rendering:-moz-crisp-edges;
+  transition:filter .8s ease;
+}
+
+/* REVEAL PROGRESS */
+.reveal-bar-wrap{height:3px;background:var(--border);flex-shrink:0}
+.reveal-bar{height:100%;background:var(--amber);transition:width .5s linear}
+
+/* BUZZ ZONE */
+.buzz-zone{flex-shrink:0;padding:10px 14px;border-top:1px solid var(--border);background:var(--panel)}
+.buzz-btn{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:6px;width:100%;padding:14px;background:var(--red);color:#fff;border:none;cursor:pointer;border-radius:2px;transition:all .1s;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.buzz-btn:active{transform:scale(.97)}
+.buzz-btn:disabled{background:#2a0a0e;color:#442233;cursor:default}
+.buzz-input-wrap{display:flex;gap:8px;align-items:stretch}
+.buzz-input{flex:1;font-size:15px;letter-spacing:2px;padding:12px}
+.buzz-submit{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;padding:0 20px;background:var(--green);color:#000;border:none;cursor:pointer;border-radius:2px}
+
+/* BUZZ LOG */
+.buzz-log{max-height:80px;overflow-y:auto;margin-bottom:6px}
+.buzz-entry{font-size:10px;letter-spacing:1px;padding:3px 0;border-bottom:1px solid var(--border)}
+.buzz-entry.wrong{color:var(--red)}
+.buzz-entry.right{color:var(--green)}
+.buzz-entry.pending{color:var(--amber)}
+
+/* SCOREBOARD */
+.score-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:2px;margin-bottom:5px}
+.score-rank{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dim);width:28px}
+.score-name{flex:1;font-size:12px;letter-spacing:2px}
+.score-pts{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--amber)}
+.score-delta{font-size:11px;color:var(--green);min-width:40px;text-align:right}
+.score-row.winner{border-color:var(--amber);background:#0d0a00}
+.score-row.me{border-color:var(--blue)}
+
+/* BETWEEN ROUNDS */
+.reveal-answer{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--green);text-align:center;padding:8px 0}
+.reveal-meta{font-size:10px;letter-spacing:2px;color:var(--dim);text-align:center;margin-top:4px}
+.reveal-img-wrap{text-align:center;padding:10px 0}
+.reveal-img-wrap img{max-height:220px;border-radius:2px;box-shadow:0 4px 24px rgba(0,0,0,.6)}
+
+/* CATEGORY BADGE */
+.cat-badge{font-size:9px;letter-spacing:3px;padding:3px 8px;border-radius:2px;display:inline-block}
+.cat-film{background:rgba(255,34,68,.15);color:var(--red);border:1px solid rgba(255,34,68,.3)}
+.cat-serie{background:rgba(68,136,255,.15);color:var(--blue);border:1px solid rgba(68,136,255,.3)}
+
+/* POINT TIERS */
+.tier-indicator{display:flex;gap:4px;align-items:center}
+.tier{font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:2px;opacity:.4}
+.tier.active{opacity:1;font-weight:700}
+.tier-1{background:rgba(0,255,136,.2);color:var(--green);border:1px solid var(--green)}
+.tier-2{background:rgba(255,204,0,.2);color:var(--amber);border:1px solid var(--amber)}
+.tier-3{background:rgba(255,136,0,.2);color:#ff8800;border:1px solid #ff8800}
+.tier-4{background:rgba(255,34,68,.2);color:var(--red);border:1px solid var(--red)}
+
+/* WAITING */
+.wt{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:3px;color:var(--dim)}
+.wd{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:wdot 1.2s ease-in-out infinite}
+.wd:nth-child(2){animation-delay:.2s}
+.wd:nth-child(3){animation-delay:.4s}
+@keyframes wdot{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* FINAL PODIUM */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:20px 0}
+.podium-col{text-align:center}
+.podium-bar{width:70px;border-radius:2px 2px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px}
+.podium-bar-1{height:120px;background:var(--amber)}
+.podium-bar-2{height:80px;background:#888}
+.podium-bar-3{height:55px;background:#a0522d}
+.podium-num{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#000}
+.podium-name{font-size:10px;letter-spacing:2px;margin-top:5px;color:var(--text)}
+.podium-pts{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--dim)}
+
+/* ON AIR */
+.on-air{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:4px;color:var(--red);border:1px solid var(--red);padding:3px 8px;border-radius:2px;animation:onair 1.5s ease-in-out infinite alternate}
+@keyframes onair{from{opacity:1}to{opacity:.3}}
+</style>
+</head>
+<body>
+<div class="notif" id="notif"></div>
+<div class="app" id="app">
+
+  <!-- PASSWORD -->
+  <div id="screen-password" class="screen">
+    <div style="display:flex;align-items:center;justify-content:center;min-height:100vh">
+      <div class="panel" style="width:100%;max-width:340px">
+        <div style="text-align:center;margin-bottom:20px">
+          <div class="logo">PIXEL<br>GUESS</div>
+          <div class="subtitle">ACCÈS RESTREINT</div>
+        </div>
+        <label>MOT DE PASSE</label>
+        <input type="password" id="pg-pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPassword()">
+        <div id="pg-pw-error" style="display:none;font-size:10px;letter-spacing:2px;color:var(--red);margin-top:6px">MOT DE PASSE INCORRECT</div>
+        <button class="btn bsolid-a bblock" onclick="checkPassword()" style="margin-top:12px">▶ ENTRER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="screen-home" class="screen">
+    <div class="home-hero">
+      <div class="logo">PIXEL<br>GUESS</div>
+      <div class="subtitle">DEVINEZ LE FILM OU LA SÉRIE</div>
+    </div>
+    <div class="home-grid">
+      <button class="btn bsolid-a" onclick="goToHost()" style="padding:18px;font-size:13px">🎬 HÔTE</button>
+      <button class="btn ba" onclick="showScreen('screen-join')" style="padding:18px;font-size:13px">🎮 REJOINDRE</button>
+    </div>
+    <div style="margin-top:12px;text-align:center;font-size:10px;letter-spacing:2px;color:var(--dim)">Films · Séries · Buzz · Points</div>
+  </div>
+
+  <!-- HOST SETUP -->
+  <div id="screen-host" class="screen">
+    <div class="panel">
+      <div class="ptitle">⚙ PARAMÈTRES</div>
+      <label>Ton pseudo</label>
+      <input type="text" id="host-pseudo" placeholder="Ton nom..." maxlength="16">
+
+      <label>Nombre de manches</label>
+      <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
+        <button class="btn bsm ba" onclick="setRounds(5)">5</button>
+        <button class="btn bsm ba" onclick="setRounds(10)">10</button>
+        <button class="btn bsm ba" onclick="setRounds(15)">15</button>
+        <input type="number" id="rounds-input" value="10" min="3" max="30" style="width:70px;text-align:center">
+      </div>
+
+      <label>Type de contenu</label>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn bsm bsolid-a" id="type-mixed" onclick="setType('mixed')" style="flex:1">🎲 MIXTE</button>
+        <button class="btn bsm ba" id="type-movie" onclick="setType('movie')" style="flex:1">🎬 FILMS</button>
+        <button class="btn bsm ba" id="type-tv" onclick="setType('tv')" style="flex:1">📺 SÉRIES</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">🎯 DIFFICULTÉ</div>
+      <div style="font-size:10px;letter-spacing:1px;color:var(--dim);margin-bottom:8px">Détermine la popularité des œuvres proposées</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn bsm bsolid-a" id="diff-easy" onclick="setDiff('easy')" style="flex:1">
+          😊 FACILE<br><span style="font-size:9px;letter-spacing:1px;font-family:'Space Mono',monospace;opacity:.7">Blockbusters</span>
+        </button>
+        <button class="btn bsm ba" id="diff-medium" onclick="setDiff('medium')" style="flex:1">
+          🤔 MOYEN<br><span style="font-size:9px;letter-spacing:1px;font-family:'Space Mono',monospace;opacity:.7">Populaires</span>
+        </button>
+        <button class="btn bsm ba" id="diff-hard" onclick="setDiff('hard')" style="flex:1">
+          💀 DIFFICILE<br><span style="font-size:9px;letter-spacing:1px;font-family:'Space Mono',monospace;opacity:.7">Moins connus</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ptitle">📅 PÉRIODE</div>
+      <div style="font-size:10px;letter-spacing:1px;color:var(--dim);margin-bottom:8px">Fourchette de dates de sortie (laisser vide = toutes époques)</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1">
+          <label>DEPUIS</label>
+          <input type="number" id="year-from" placeholder="ex: 2000" min="1920" max="2024" style="text-align:center">
+        </div>
+        <div style="color:var(--dim);padding-top:14px">→</div>
+        <div style="flex:1">
+          <label>JUSQU'À</label>
+          <input type="number" id="year-to" placeholder="ex: 2024" min="1920" max="2024" style="text-align:center">
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn bsm br" onclick="setEra('','')" style="font-size:9px">Toutes époques</button>
+        <button class="btn bsm br" onclick="setEra(2020,2024)" style="font-size:9px">2020+</button>
+        <button class="btn bsm br" onclick="setEra(2010,2019)" style="font-size:9px">2010s</button>
+        <button class="btn bsm br" onclick="setEra(2000,2009)" style="font-size:9px">2000s</button>
+        <button class="btn bsm br" onclick="setEra(1990,1999)" style="font-size:9px">90s</button>
+        <button class="btn bsm br" onclick="setEra(1980,1989)" style="font-size:9px">80s</button>
+      </div>
+    </div>
+
+    <button class="btn bsolid-r bblock" onclick="startGame()" style="font-size:16px;padding:13px">▶ CRÉER LA PARTIE</button>
+    <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+  </div>
+
+  <!-- JOIN -->
+  <div id="screen-join" class="screen">
+    <div class="panel">
+      <div class="ptitle">🔗 REJOINDRE</div>
+      <label>Code de la room</label>
+      <input type="text" id="join-code" placeholder="ex: A3KX" maxlength="4" style="text-transform:uppercase;letter-spacing:8px;font-size:20px;text-align:center" oninput="this.value=this.value.toUpperCase()">
+      <label>Ton pseudo</label>
+      <input type="text" id="join-pseudo" placeholder="Ton nom..." maxlength="16">
+      <button class="btn bsolid-g bblock" onclick="joinRoom()" style="margin-top:12px">▶ REJOINDRE</button>
+      <button class="btn br bblock" onclick="showScreen('screen-home')" style="opacity:.5">← RETOUR</button>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="screen-lobby" class="screen">
+    <div class="panel" style="text-align:center">
+      <div style="font-size:10px;letter-spacing:4px;color:var(--dim);margin-bottom:4px">CODE DE LA ROOM</div>
+      <div class="room-code" id="lobby-code">----</div>
+      <div style="font-size:10px;letter-spacing:2px;color:var(--dim)" id="lobby-config-info"></div>
+      <div style="margin-top:10px;padding:7px 10px;background:#0a0a0a;border:1px solid var(--border);border-radius:2px">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--dim);margin-bottom:5px">🔗 LIEN D'INVITATION (sans mdp)</div>
+        <a id="lobby-invite-link" href="#" style="font-size:9px;color:var(--amber);word-break:break-all;letter-spacing:.5px;text-decoration:none"
+           onclick="navigator.clipboard.writeText(this.href).then(()=>{const t=this;const prev=t.textContent;t.textContent='✓ COPIÉ !';setTimeout(()=>t.textContent=prev,1800)});event.preventDefault();">---</a>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">👥 JOUEURS</div>
+      <div id="lobby-players"></div>
+    </div>
+    <button class="btn bsolid-a bblock" id="lobby-start-btn" onclick="launchGame()" disabled style="font-size:15px;padding:13px">▶ LANCER</button>
+    <button class="btn br bblock" onclick="cancelLobby()" style="opacity:.5">✕ ANNULER</button>
+  </div>
+
+  <!-- WAITING (player) -->
+  <div id="screen-waiting" class="screen">
+    <div class="panel" style="text-align:center;padding:24px 24px 16px">
+      <div style="font-size:36px;margin-bottom:10px">🎬</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:4px;color:var(--green);margin-bottom:6px" id="wait-name">JOUEUR</div>
+      <div style="font-size:10px;letter-spacing:3px;color:var(--green);margin-bottom:20px">CONNECTÉ</div>
+      <div class="wt"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DE L'HÔTE...</span></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">👥 JOUEURS DANS LE LOBBY</div>
+      <div id="waiting-players"></div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <div>
+        <div class="game-round" id="g-round">MANCHE 1/10</div>
+        <div class="tier-indicator" id="g-tiers">
+          <div class="tier tier-1" id="t1">500</div>
+          <div class="tier tier-2" id="t2">300</div>
+          <div class="tier tier-3" id="t3">150</div>
+          <div class="tier tier-4" id="t4">50</div>
+        </div>
+      </div>
+      <div class="game-timer-wrap">
+        <div id="g-cat-badge"></div>
+        <div class="game-timer" id="g-timer">30</div>
+      </div>
+    </div>
+
+    <div class="game-body">
+      <!-- SIDEBAR INDICE — collée à gauche en absolu -->
+      <div id="hint-sidebar" style="position:absolute;left:0;top:0;bottom:0;width:180px;border-right:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;overflow:hidden">
+        <div style="font-size:9px;letter-spacing:3px;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border)">💡 INDICE</div>
+        <div id="hint-zone" style="flex:1;padding:10px 8px;display:flex;align-items:flex-start">
+          <div style="font-size:10px;letter-spacing:1px;color:var(--dim);font-style:italic" id="hint-text">Débloqué quand tout le monde buzze faux</div>
+        </div>
+      </div>
+
+      <!-- COLONNE CENTRALE : image + buzz, largeur = hauteur_dispo * 2/3 -->
+      <div id="game-main-col" style="display:flex;flex-direction:column;min-height:0">
+        <div class="img-container" id="img-container">
+          <img id="pixel-img" class="pixel-img" src="" alt="" style="width:100%;height:100%;object-fit:contain;image-rendering:pixelated">
+          <div id="img-placeholder" style="color:var(--dim);font-size:11px;letter-spacing:3px;position:absolute">CHARGEMENT...</div>
+        </div>
+        <div class="reveal-bar-wrap"><div class="reveal-bar" id="reveal-bar" style="width:0%"></div></div>
+        <div class="buzz-zone">
+          <div class="buzz-log" id="buzz-log"></div>
+          <div id="buzz-main">
+            <button class="buzz-btn" id="buzz-btn" onclick="doBuzz()">⚡ BUZZ</button>
+          </div>
+          <div id="buzz-input-zone" style="display:none">
+            <div class="buzz-input-wrap">
+              <input class="buzz-input" type="text" id="buzz-answer" placeholder="Titre du film / de la série..." autocomplete="off" onkeydown="if(event.key==='Enter')submitAnswer()">
+              <button class="buzz-submit" onclick="submitAnswer()">OK</button>
+            </div>
+            <div style="font-size:10px;letter-spacing:1px;color:var(--dim);margin-top:4px" id="buzz-countdown"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR SCORES — collée à droite en absolu -->
+      <div id="game-sidebar" style="position:absolute;right:0;top:0;bottom:0;width:180px;border-left:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;overflow:hidden">
+        <div style="font-size:9px;letter-spacing:3px;color:var(--dim);padding:8px 10px;border-bottom:1px solid var(--border)">SCORES</div>
+        <div id="sidebar-scores" style="flex:1;overflow-y:auto;padding:6px 8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BETWEEN ROUNDS -->
+  <div id="screen-between" class="screen">
+    <div class="panel" style="text-align:center;padding:16px">
+      <div style="font-size:10px;letter-spacing:3px;color:var(--dim);margin-bottom:6px">C'ÉTAIT</div>
+      <div class="reveal-answer" id="br-answer">---</div>
+      <div class="reveal-meta" id="br-meta"></div>
+      <div id="br-cat-badge" style="margin-top:6px"></div>
+    </div>
+    <div class="reveal-img-wrap">
+      <img id="br-img" src="" alt="" style="max-height:200px;border-radius:2px;box-shadow:0 4px 24px rgba(0,0,0,.6)">
+    </div>
+    <div class="panel">
+      <div class="ptitle">📊 SCORES</div>
+      <div id="br-scores"></div>
+    </div>
+    <button class="btn bsolid-a bblock" id="br-next-btn" onclick="nextRound()" style="font-size:15px;padding:13px;display:none">▶ MANCHE SUIVANTE</button>
+    <div class="wt" id="br-wait" style="justify-content:center;padding:10px;display:none"><div class="wd"></div><div class="wd"></div><div class="wd"></div><span>EN ATTENTE DE L'HÔTE...</span></div>
+  </div>
+
+  <!-- FINAL -->
+  <div id="screen-final" class="screen">
+    <div style="text-align:center;padding:24px 0 10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:4px;color:var(--dim)">FIN DE PARTIE</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:6px;color:var(--amber)">CLASSEMENT FINAL</div>
+    </div>
+    <div class="podium" id="final-podium"></div>
+    <div class="panel">
+      <div id="final-scores"></div>
+    </div>
+    <button class="btn bsolid-r bblock" onclick="showScreen('screen-home')" style="font-size:15px;padding:13px;margin-top:10px">↩ ACCUEIL</button>
+  </div>
+
+</div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import{getFirestore,doc,setDoc,getDoc,updateDoc,deleteDoc,onSnapshot,collection,runTransaction}
+  from'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const FB={apiKey:"AIzaSyCSQAfoZJLimX281lx_Bq4TketSih5P4bk",authDomain:"freeze-game-1d557.firebaseapp.com",projectId:"freeze-game-1d557"};
+const app=initializeApp(FB,'pixelguess');
+const db=getFirestore(app);
+
+const TMDB_KEY='7e3512e7bd1fb862785999409320dd1a';
+const TMDB='https://api.themoviedb.org/3';
+const IMG_BASE='https://image.tmdb.org/t/p/w500';
+
+// ── POINT TIERS ──
+const TIERS=[
+  {max:25,pts:500,idx:0},
+  {max:50,pts:300,idx:1},
+  {max:75,pts:150,idx:2},
+  {max:100,pts:50,idx:3},
+];
+const PENALTY=50;
+const ROUND_TIME=30; // secondes
+
+
+// ── SONS (Web Audio API — aucun fichier externe) ──
+const _ac=new (window.AudioContext||window.webkitAudioContext)();
+
+function playSound(type){
+  try{
+    const g=_ac.createGain();g.connect(_ac.destination);
+    if(type==='buzz'){
+      // Son d'arcade court et percutant
+      const o=_ac.createOscillator();
+      o.connect(g);o.type='square';
+      o.frequency.setValueAtTime(220,_ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(880,_ac.currentTime+0.06);
+      g.gain.setValueAtTime(0.18,_ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,_ac.currentTime+0.18);
+      o.start();o.stop(_ac.currentTime+0.18);
+    }else if(type==='correct'){
+      // Jingle ascendant joyeux
+      [523,659,784,1047].forEach((freq,i)=>{
+        const o=_ac.createOscillator();const g2=_ac.createGain();
+        o.connect(g2);g2.connect(_ac.destination);
+        o.type='sine';o.frequency.value=freq;
+        const t=_ac.currentTime+i*0.1;
+        g2.gain.setValueAtTime(0,t);
+        g2.gain.linearRampToValueAtTime(0.15,t+0.04);
+        g2.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+        o.start(t);o.stop(t+0.22);
+      });
+    }else if(type==='wrong'){
+      // Buzzer descendant désagréable
+      const o=_ac.createOscillator();
+      o.connect(g);o.type='sawtooth';
+      o.frequency.setValueAtTime(400,_ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(100,_ac.currentTime+0.3);
+      g.gain.setValueAtTime(0.15,_ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,_ac.currentTime+0.3);
+      o.start();o.stop(_ac.currentTime+0.3);
+    }else if(type==='hint'){
+      // Son discret de notification
+      [440,550].forEach((freq,i)=>{
+        const o=_ac.createOscillator();const g2=_ac.createGain();
+        o.connect(g2);g2.connect(_ac.destination);
+        o.type='sine';o.frequency.value=freq;
+        const t=_ac.currentTime+i*0.12;
+        g2.gain.setValueAtTime(0,t);
+        g2.gain.linearRampToValueAtTime(0.09,t+0.05);
+        g2.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+        o.start(t);o.stop(t+0.2);
+      });
+    }
+  }catch(e){}
+}
+
+// Débloquer AudioContext au premier clic (politique navigateur)
+document.addEventListener('click',()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
+
+const AVATARS=['🎬','🎭','⭐','🍿','🎥','📽','🎦','🎞'];
+const COLORS=['#ff2244','#ffcc00','#00ff88','#4488ff','#ff55aa','#aa00ff','#00aaff','#ff8800'];
+
+let gs={
+  isHost:false,myId:null,myName:'',myAvatar:'',myColor:'',
+  roomCode:null,players:[],
+  round:0,totalRounds:10,category:'mixed',
+  currentMovie:null,phase:'lobby',scores:{},
+};
+let unsubRoom=null;
+let timerInterval=null;
+let buzzCountdown=null;
+let _revealPct=0;
+let _hasBuzzed=false;
+let _isAnswering=false;
+let _wrongBuzzers=new Set();
+
+// ── HELPERS ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+window.showScreen=showScreen;
+
+let nTimer;
+function notif(msg,type=''){
+  const el=document.getElementById('notif');
+  el.textContent=msg;el.className='notif show'+(type?' '+type:'');
+  clearTimeout(nTimer);nTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+function rndCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s}
+function rndId(){return Math.random().toString(36).slice(2,10)}
+function rndFrom(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+function setRounds(n){document.getElementById('rounds-input').value=n}
+window.setRounds=setRounds;
+
+// Type / diff / era UI helpers
+let _selType='mixed',_selDiff='easy';
+window.setType=function(t){
+  _selType=t;
+  ['mixed','movie','tv'].forEach(v=>{
+    const b=document.getElementById('type-'+v);
+    if(b)b.className='btn bsm '+(v===t?'bsolid-a':'ba');
+  });
+};
+window.setDiff=function(d){
+  _selDiff=d;
+  ['easy','medium','hard'].forEach(v=>{
+    const b=document.getElementById('diff-'+v);
+    if(b)b.className='btn bsm '+(v===d?'bsolid-a':'ba');
+  });
+};
+window.setEra=function(from,to){
+  document.getElementById('year-from').value=from||'';
+  document.getElementById('year-to').value=to||'';
+};
+
+// Password: même que dubstudio
+const PW_HASH='ef9b1d3f34a05dd3ee9cb657740a691b11c5b55695328d4e574e4819c80e2d3a';
+let hostOk=sessionStorage.getItem('pg_ok')==='1';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+window.checkPassword=async function(){
+  const h=await sha256(document.getElementById('pg-pw-input').value);
+  if(h===PW_HASH){
+    hostOk=true;sessionStorage.setItem('pg_ok','1');
+    showScreen('screen-home');
+  }else{
+    document.getElementById('pg-pw-error').style.display='block';
+    document.getElementById('pg-pw-input').value='';
+    document.getElementById('pg-pw-input').focus();
+  }
+};
+// Difficulté → pages TMDB à utiliser
+// easy: pages 1-5 (top blockbusters), medium: 6-15, hard: 16-40
+// Page ranges élargis — bien plus de variété
+const DIFF_PAGES={easy:[1,10],medium:[5,25],hard:[15,50]};
+
+// IDs déjà vus cette partie (côté hôte uniquement)
+let _seenIds=new Set(); // clés = "type:id" pour éviter collision film/série même ID
+
+async function fetchRandomMovie(cfg,attempt=0){
+  const {cat,diff,yearFrom,yearTo}=cfg;
+  const type=cat==='mixed'?(Math.random()<.5?'movie':'tv'):cat==='movie'?'movie':'tv';
+  const [pMin,pMax]=DIFF_PAGES[diff]||DIFF_PAGES.easy;
+  const page=pMin+Math.floor(Math.random()*(pMax-pMin+1));
+
+  const dateFromKey=type==='movie'?'primary_release_date.gte':'first_air_date.gte';
+  const dateToKey  =type==='movie'?'primary_release_date.lte':'first_air_date.lte';
+  const params=new URLSearchParams({
+    api_key:TMDB_KEY,
+    language:'fr-FR',
+    sort_by:'popularity.desc',
+    page,
+    'vote_count.gte':diff==='easy'?300:diff==='medium'?80:15,
+  });
+  if(yearFrom) params.set(dateFromKey,`${yearFrom}-01-01`);
+  if(yearTo)   params.set(dateToKey,  `${yearTo}-12-31`);
+
+  const r=await fetch(`${TMDB}/discover/${type}?${params}`);
+  const d=await r.json();
+  // Clé unique = "type:id" pour éviter collision entre film et série de même ID numérique
+  const items=(d.results||[]).filter(m=>m.poster_path&&!_seenIds.has(`${type}:${m.id}`));
+
+  if(!items.length){
+    if(attempt<5) return fetchRandomMovie(cfg,attempt+1); // retry autre page
+    if(yearFrom||yearTo) return fetchRandomMovie({...cfg,yearFrom:null,yearTo:null},0);
+    _seenIds.clear();
+    return fetchRandomMovie(cfg,0);
+  }
+
+  const item=rndFrom(items);
+  _seenIds.add(`${type}:${item.id}`); // stocker avec préfixe type
+
+  return{
+    id:item.id,
+    type,
+    title:(type==='movie'?item.title:item.name)||'???',
+    originalTitle:(type==='movie'?item.original_title:item.original_name)||'',
+    poster:IMG_BASE+item.poster_path,
+    year:(type==='movie'?item.release_date:item.first_air_date||'')?.slice(0,4)||'',
+    popularity:Math.round(item.popularity),
+  };
+}
+
+// ── NORMALIZE for comparison ──
+function normalize(str){
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/^(le |la |les |l'|l'|the |a |an )/,'')
+    .replace(/[^a-z0-9]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+function isCorrect(answer,movie){
+  const a=normalize(answer);
+  const t=normalize(movie.title);
+  const ot=normalize(movie.originalTitle);
+  if(!a||a.length<2)return false;
+  // Exact match
+  if(a===t||a===ot)return true;
+  // Le joueur a tapé le titre complet + des mots en plus (ex: "avatar le film") → ok
+  if(a.includes(t)&&t.length>3)return true;
+  if(a.includes(ot)&&ot.length>3)return true;
+  // Tolérance faute de frappe : distance de Levenshtein ≤ 2 pour titres courts, ≤ 3 pour longs
+  const maxDist=t.length<=8?1:t.length<=15?2:3;
+  if(levenshtein(a,t)<=maxDist)return true;
+  if(ot&&levenshtein(a,ot)<=maxDist)return true;
+  return false;
+}
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i?j?0:i:j));
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// ── HOST SETUP ──
+window.goToHost=function(){showScreen('screen-host')};
+
+// Démarrage : détecter ?join=CODE dans l'URL
+const _urlParams=new URLSearchParams(window.location.search);
+const _joinCode=_urlParams.get('join');
+
+if(_joinCode){
+  // Lien d'invitation direct → screen-join avec code pré-rempli, sans mdp
+  showScreen('screen-join');
+  setTimeout(()=>{
+    const jc=document.getElementById('join-code');
+    if(jc)jc.value=_joinCode.toUpperCase();
+    document.getElementById('join-pseudo')?.focus();
+  },50);
+}else if(!hostOk){
+  showScreen('screen-password');
+}else{
+  showScreen('screen-home');
+}
+
+window.startGame=async function(){
+  const name=document.getElementById('host-pseudo').value.trim();
+  if(!name){notif('Entre ton pseudo','err');return}
+  const rounds=parseInt(document.getElementById('rounds-input').value)||10;
+  const yearFrom=parseInt(document.getElementById('year-from').value)||null;
+  const yearTo=parseInt(document.getElementById('year-to').value)||null;
+  const cfg={cat:_selType,diff:_selDiff,yearFrom,yearTo};
+
+  const code=rndCode();
+  const myId=rndId();
+  gs.myId=myId;gs.myName=name;gs.isHost=true;gs.roomCode=code;
+  gs.totalRounds=rounds;gs.cfg=cfg;
+  gs.myAvatar=rndFrom(AVATARS);gs.myColor=rndFrom(COLORS);
+
+  const playerData={id:myId,name,avatar:gs.myAvatar,color:gs.myColor,isHost:true};
+  gs.players=[playerData];
+  gs.scores={[myId]:0};
+
+  const diffLabel={easy:'FACILE',medium:'MOYEN',hard:'DIFFICILE'}[_selDiff];
+  const catLabel=_selType==='mixed'?'MIXTE':_selType==='movie'?'FILMS':'SÉRIES';
+  const eraLabel=yearFrom||yearTo?` · ${yearFrom||'?'}→${yearTo||'?'}`:'';
+
+  await setDoc(doc(db,'pg_rooms',code),{
+    phase:'lobby',round:0,totalRounds:rounds,cfg,
+    players:{[myId]:playerData},
+    scores:{[myId]:0},
+    currentMovie:null,buzzLog:[],hostId:myId,
+    createdAt:Date.now(),
+  });
+
+  document.getElementById('lobby-code').textContent=code;
+  // Lien d'invitation direct (sans mdp)
+  const inviteUrl=`${location.origin}${location.pathname}?join=${code}`;
+  const inviteEl=document.getElementById('lobby-invite-link');
+  if(inviteEl){inviteEl.textContent=inviteUrl;inviteEl.href=inviteUrl;}
+  document.getElementById('lobby-config-info').textContent=`${rounds} MANCHES · ${catLabel} · ${diffLabel}${eraLabel}`;
+  document.getElementById('lobby-start-btn').disabled=false;
+  showScreen('screen-lobby');
+  listenRoom(code);
+};
+
+// ── JOIN ──
+window.joinRoom=async function(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  const name=document.getElementById('join-pseudo').value.trim();
+  if(!code||code.length!==4){notif('Code invalide','err');return}
+  if(!name){notif('Entre ton pseudo','err');return}
+
+  const snap=await getDoc(doc(db,'pg_rooms',code)).catch(()=>null);
+  if(!snap?.exists()){notif('Room introuvable','err');return}
+  const d=snap.data();
+  if(d.phase!=='lobby'){notif('Partie déjà commencée','err');return}
+
+  const myId=rndId();
+  gs.myId=myId;gs.myName=name;gs.isHost=false;gs.roomCode=code;
+  gs.myAvatar=rndFrom(AVATARS);gs.myColor=rndFrom(COLORS);
+  gs.totalRounds=d.totalRounds;gs.category=d.category;
+
+  const playerData={id:myId,name,avatar:gs.myAvatar,color:gs.myColor,isHost:false};
+  await updateDoc(doc(db,'pg_rooms',code),{
+    [`players.${myId}`]:playerData,
+    [`scores.${myId}`]:0,
+  });
+
+  document.getElementById('wait-name').textContent=name.toUpperCase();
+  showScreen('screen-waiting');
+  listenRoom(code);
+};
+
+// ── LOBBY ──
+window.launchGame=async function(){
+  if(!gs.isHost)return;
+  _seenIds.clear();
+  await loadNextMovieAndUpdate(1);
+};
+
+window.cancelLobby=async function(){
+  if(unsubRoom)unsubRoom();
+  if(gs.isHost)await deleteDoc(doc(db,'pg_rooms',gs.roomCode)).catch(()=>{});
+  showScreen('screen-home');
+};
+
+// ── LOAD NEXT MOVIE ──
+async function loadNextMovieAndUpdate(round){
+  notif('Chargement...');
+  try{
+    const movie=await fetchRandomMovie(gs.cfg||{cat:'mixed',diff:'easy',yearFrom:null,yearTo:null});
+    await updateDoc(doc(db,'pg_rooms',gs.roomCode),{
+      phase:'playing',round,
+      currentMovie:movie,
+      buzzLog:[],
+      roundStartedAt:Date.now(),
+      wrongBuzzers:[],
+      currentHint:null,
+      hintUnlocked:false,
+      buzzingPlayerId:null,
+      roundWinner:null,
+    });
+  }catch(e){notif('Erreur TMDB','err');console.error(e)}
+}
+
+// ── LISTEN ROOM ──
+function listenRoom(code){
+  if(unsubRoom)unsubRoom();
+  unsubRoom=onSnapshot(doc(db,'pg_rooms',code),snap=>{
+    if(!snap.exists())return;
+    const d=snap.data();
+    syncState(d);
+  });
+}
+
+function syncState(d){
+  gs.players=Object.values(d.players||{});
+  gs.scores=d.scores||{};
+  gs.round=d.round||0;
+  gs.totalRounds=d.totalRounds||10;
+  gs.phase=d.phase;
+  if(d.cfg)gs.cfg=d.cfg;
+
+  // Mettre à jour lobby
+  if(d.phase==='lobby'){
+    renderLobbyPlayers();
+    // Mettre à jour aussi la liste pour les joueurs en attente
+    const waitEl=document.getElementById('waiting-players');
+    if(waitEl){
+      waitEl.innerHTML=gs.players.map(p=>`
+        <div class="player-chip">
+          <div class="av">${p.avatar}</div>
+          <div class="nm">${p.name}</div>
+          ${p.isHost?'<div class="host-badge">HÔTE</div>':''}
+          ${p.id===gs.myId?'<div style="font-size:9px;letter-spacing:1px;color:var(--amber);margin-left:auto">VOUS</div>':''}
+        </div>`).join('');
+    }
+    if(document.getElementById('screen-lobby').classList.contains('on')){
+      document.getElementById('lobby-start-btn').disabled=gs.players.length<1;
+    }
+    return;
+  }
+
+  if(d.phase==='playing'){
+    const isNewRound=!gs.currentMovie||gs.currentMovie.id!==d.currentMovie?.id;
+    gs.currentMovie=d.currentMovie;
+    gs.scores=d.scores||gs.scores;
+    _wrongBuzzers=new Set(d.wrongBuzzers||[]);
+
+    const someoneBuzzing=!!(d.buzzingPlayerId);
+
+    // Synchroniser la pause du timer pour TOUS les joueurs
+    if(someoneBuzzing && d.buzzingPlayerId!==gs.myId){
+      _isAnswering=true;
+    } else if(!someoneBuzzing){
+      _isAnswering=false;
+    }
+
+    // Reset global : wrongBuzzers vidé + personne en train de répondre → tout le monde rebuzze
+    const globalReset=d.wrongBuzzers?.length===0&&!someoneBuzzing&&_hasBuzzed;
+    if(globalReset){
+      _hasBuzzed=false;
+    }
+
+    if(isNewRound||!document.getElementById('screen-game').classList.contains('on')){
+      showGameScreen(d);
+    }else{
+      renderBuzzLog(d.buzzLog||[]);
+      renderSidebarScores();
+      renderHint(d.currentHint||null);
+      const iWrong=_wrongBuzzers.has(gs.myId);
+      if(iWrong||someoneBuzzing){
+        document.getElementById('buzz-btn').disabled=true;
+      }else{
+        document.getElementById('buzz-btn').disabled=_hasBuzzed;
+        if(!_hasBuzzed){
+          document.getElementById('buzz-input-zone').style.display='none';
+          document.getElementById('buzz-main').style.display='block';
+        }
+      }
+    }
+    return;
+  }
+
+  if(d.phase==='between'){
+    showBetweenScreen(d);
+    return;
+  }
+
+  if(d.phase==='final'){
+    showFinalScreen(d);
+    return;
+  }
+}
+
+function renderLobbyPlayers(){
+  const el=document.getElementById('lobby-players');if(!el)return;
+  el.innerHTML=gs.players.map(p=>`
+    <div class="player-chip">
+      <div class="av">${p.avatar}</div>
+      <div class="nm">${p.name}</div>
+      ${p.isHost?'<div class="host-badge">HÔTE</div>':''}
+    </div>`).join('');
+}
+
+// ── GAME SCREEN ──
+function showGameScreen(d){
+  clearInterval(timerInterval);clearInterval(buzzCountdown);
+  _hasBuzzed=false;_isAnswering=false;_revealPct=0;
+
+  showScreen('screen-game');
+  // Calculer la largeur de la colonne image = hauteur dispo * 2/3 (ratio affiche)
+  requestAnimationFrame(()=>{
+    const body=document.getElementById('screen-game').querySelector('.game-body');
+    const col=document.getElementById('game-main-col');
+    if(body&&col){
+      const h=body.getBoundingClientRect().height;
+      const buzzH=col.querySelector('.buzz-zone')?.getBoundingClientRect().height||120;
+      const imgH=h-buzzH-3; // 3px barre reveal
+      const w=Math.min(Math.round(imgH*2/3),window.innerWidth-160);
+      col.style.width=Math.max(280,w)+'px';
+    }
+  });
+
+  // Round info
+  document.getElementById('g-round').textContent=`MANCHE ${d.round}/${gs.totalRounds}`;
+
+  // Category badge
+  const catEl=document.getElementById('g-cat-badge');
+  catEl.innerHTML=d.currentMovie?.type==='movie'
+    ?'<span class="cat-badge cat-film">FILM</span>'
+    :'<span class="cat-badge cat-serie">SÉRIE</span>';
+
+  // Image avec flou max
+  const img=document.getElementById('pixel-img');
+  const placeholder=document.getElementById('img-placeholder');
+  img.style.display='none';
+  placeholder.style.display='block';
+  img.onload=()=>{img.style.display='block';placeholder.style.display='none'};
+  img.src=d.currentMovie?.poster||'';
+  img.style.filter='blur(40px)';
+
+  // Buzz UI reset
+  document.getElementById('buzz-btn').disabled=false;
+  document.getElementById('buzz-main').style.display='block';
+  document.getElementById('buzz-input-zone').style.display='none';
+  document.getElementById('buzz-log').innerHTML='';
+  renderBuzzLog(d.buzzLog||[]);
+  renderSidebarScores();
+  renderHint(null); // reset indice
+
+  // Si déjà faux buzzer — désactiver
+  if(_wrongBuzzers.has(gs.myId)){
+    document.getElementById('buzz-btn').disabled=true;
+  }
+
+  // Timer + reveal progressif
+  const startedAt=d.roundStartedAt||Date.now();
+  startRoundTimer(startedAt);
+}
+
+let _elapsedBeforePause=0; // secondes accumulées avant la dernière pause
+let _pauseStartedAt=null;  // timestamp du début de la pause en cours
+
+function startRoundTimer(startedAt){
+  clearInterval(timerInterval);
+  _elapsedBeforePause=0;
+  _pauseStartedAt=null;
+
+  function tick(){
+    if(_isAnswering){
+      // On entre en pause : mémoriser le temps accumulé
+      if(!_pauseStartedAt){
+        _pauseStartedAt=Date.now();
+        _elapsedBeforePause+=(Date.now()-startedAt-_elapsedBeforePause*1000)/1000;
+        // Calcul plus propre : elapsed jusqu'ici
+        const elapsedNow=(Date.now()-startedAt)/1000;
+        _elapsedBeforePause=elapsedNow; // snap au moment de la pause
+      }
+      return;
+    }
+    // Sortie de pause : réinitialiser le point de référence
+    if(_pauseStartedAt){
+      const pauseDuration=(Date.now()-_pauseStartedAt)/1000;
+      startedAt+=pauseDuration*1000; // décaler startedAt de la durée de pause
+      _pauseStartedAt=null;
+    }
+
+    const elapsed=(Date.now()-startedAt)/1000;
+    const remaining=Math.max(0,ROUND_TIME-elapsed);
+    const pct=Math.min(100,(elapsed/ROUND_TIME)*100);
+    _revealPct=pct;
+
+    const timerEl=document.getElementById('g-timer');
+    timerEl.textContent=Math.ceil(remaining);
+    timerEl.classList.toggle('urgent',remaining<=10);
+
+    document.getElementById('reveal-bar').style.width=pct+'%';
+
+    const blur=Math.max(0,40*(1-pct/100));
+    const img=document.getElementById('pixel-img');
+    if(img)img.style.filter=`blur(${blur.toFixed(1)}px)`;
+
+    const tier=TIERS.find(t=>pct<=t.max)||TIERS[3];
+    TIERS.forEach((t,i)=>document.getElementById('t'+(i+1)).classList.toggle('active',i===tier.idx));
+
+    if(remaining<=0){
+      clearInterval(timerInterval);
+      if(gs.isHost) hostTimeUp();
+    }
+  }
+  tick();
+  timerInterval=setInterval(tick,200);
+}
+
+async function hostTimeUp(){
+  clearInterval(timerInterval);
+  const d=await getDoc(doc(db,'pg_rooms',gs.roomCode));
+  if(!d.exists()||d.data().phase!=='playing')return;
+  await updateDoc(doc(db,'pg_rooms',gs.roomCode),{
+    phase:'between',
+    roundWinner:null,
+    winnerName:null,
+    revealedAt:Date.now(),
+  });
+}
+
+// ── BUZZ ──
+let _buzzPct=0; // % de révélation au moment du buzz → détermine les points
+window.doBuzz=function(){
+  if(_hasBuzzed||_isAnswering)return;
+  playSound('buzz');
+  _hasBuzzed=true;_isAnswering=true; // met le timer en pause localement
+  _buzzPct=_revealPct; // capture le tier au moment exact du buzz
+  // Signaler à tous les joueurs que quelqu'un répond
+  updateDoc(doc(db,'pg_rooms',gs.roomCode),{buzzingPlayerId:gs.myId}).catch(()=>{});
+  document.getElementById('buzz-btn').disabled=true;
+  document.getElementById('buzz-main').style.display='none';
+  document.getElementById('buzz-input-zone').style.display='block';
+  document.getElementById('buzz-answer').value='';
+  document.getElementById('buzz-answer').focus();
+
+  // 15 secondes pour répondre
+  let t=15;
+  document.getElementById('buzz-countdown').textContent=`${t}s pour répondre...`;
+  buzzCountdown=setInterval(()=>{
+    t--;
+    document.getElementById('buzz-countdown').textContent=`${t}s pour répondre...`;
+    if(t<=0){
+      clearInterval(buzzCountdown);
+      handleWrongAnswer('⏱ Temps écoulé');
+    }
+  },1000);
+};
+
+window.submitAnswer=async function(){
+  clearInterval(buzzCountdown);
+  const answer=document.getElementById('buzz-answer').value.trim();
+  if(!answer)return;
+  _isAnswering=false;
+
+  document.getElementById('buzz-input-zone').style.display='none';
+  document.getElementById('buzz-main').style.display='block';
+
+  const movie=gs.currentMovie;
+  if(isCorrect(answer,movie)){
+    // BONNE RÉPONSE — utiliser le % au moment du buzz, pas après la saisie
+    const tier=TIERS.find(t=>_buzzPct<=t.max)||TIERS[3];
+    const pts=tier.pts;
+    const newScore=(gs.scores[gs.myId]||0)+pts;
+
+    playSound('correct');
+    // Ajouter au buzz log
+    const entry={playerId:gs.myId,playerName:gs.myName,answer,correct:true,pts};
+    const d=await getDoc(doc(db,'pg_rooms',gs.roomCode));
+    const buzzLog=[...(d.data()?.buzzLog||[]),entry];
+
+    // Mettre à jour scores + passer à between
+    await updateDoc(doc(db,'pg_rooms',gs.roomCode),{
+      buzzLog,
+      [`scores.${gs.myId}`]:newScore,
+      phase:'between',
+      roundWinner:gs.myId,
+      winnerName:gs.myName,
+      winnerPts:pts,
+      revealedAt:Date.now(),
+      buzzingPlayerId:null,
+    });
+  }else{
+    handleWrongAnswer(answer);
+  }
+};
+
+async function handleWrongAnswer(answer){
+  clearInterval(buzzCountdown);
+  playSound('wrong');
+  _isAnswering=false;
+  document.getElementById('buzz-input-zone').style.display='none';
+  document.getElementById('buzz-main').style.display='block';
+  const newScore=Math.max(0,(gs.scores[gs.myId]||0)-PENALTY);
+  const entry={playerId:gs.myId,playerName:gs.myName,answer,correct:false,pts:-PENALTY};
+
+  let allWrong=false;
+  let shouldUnlockHint=false;
+
+  await runTransaction(db,async(transaction)=>{
+    const ref=doc(db,'pg_rooms',gs.roomCode);
+    const snap=await transaction.get(ref);
+    if(!snap.exists())return;
+    const roomData=snap.data();
+    const buzzLog=[...(roomData.buzzLog||[]),entry];
+    const wrongBuzzers=[...(roomData.wrongBuzzers||[]),gs.myId];
+    const allPlayerIds=Object.keys(roomData.players||{});
+    allWrong=allPlayerIds.every(id=>wrongBuzzers.includes(id));
+    const hintAlreadyUnlocked=roomData.hintUnlocked===true;
+    shouldUnlockHint=allWrong&&!hintAlreadyUnlocked;
+    transaction.update(ref,{
+      buzzLog,
+      wrongBuzzers:allWrong?[]:wrongBuzzers,
+      [`scores.${gs.myId}`]:newScore,
+      buzzingPlayerId:null,
+      ...(shouldUnlockHint?{hintUnlocked:true}:{}),
+    });
+  });
+
+  if(allWrong){
+    if(shouldUnlockHint){
+      playSound('hint');
+      notif('💡 Indice débloqué !');
+      // Chaque client essaie de fetch — hintUnlocked:true dans la transaction garantit
+      // que currentHint ne sera écrit qu'une seule fois (le premier qui finit gagne)
+      fetchHint(gs.currentMovie).then(hint=>{
+        updateDoc(doc(db,'pg_rooms',gs.roomCode),{currentHint:hint}).catch(()=>{});
+      });
+    }else{
+      notif('Nouveau tour de buzz !');
+    }
+  }else{
+    document.getElementById('buzz-btn').disabled=true;
+    notif(`-${PENALTY} pts !`,'err');
+  }
+}
+
+// ── INDICE TMDB ──
+async function fetchHint(movie){
+  try{
+    const url=`${TMDB}/${movie.type}/${movie.id}?api_key=${TMDB_KEY}&language=fr-FR&append_to_response=credits`;
+    const r=await fetch(url);const d=await r.json();
+    const genres=(d.genres||[]).slice(0,2).map(g=>g.name).join(', ');
+    const cast=(movie.type==='movie'?d.credits?.cast:d.credits?.cast)||[];
+    const actor=cast[0]?.name||'';
+    const year=movie.year||'';
+    const parts=[year&&`📅 ${year}`,genres&&`🎭 ${genres}`,actor&&`⭐ ${actor}`].filter(Boolean);
+    return parts.join('  ·  ')||'Aucun indice disponible';
+  }catch(e){return'Indice indisponible'}
+}
+
+function renderBuzzLog(log){
+  const el=document.getElementById('buzz-log');if(!el)return;
+  el.innerHTML=log.map(e=>`
+    <div class="buzz-entry ${e.correct?'right':'wrong'}">
+      ${e.playerName} — "${e.answer}" ${e.correct?'✓ +'+e.pts+'pts':'✗ -'+PENALTY+'pts'}
+    </div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+function renderHint(hint){
+  const txt=document.getElementById('hint-text');
+  if(!txt)return;
+  if(hint){
+    txt.textContent=hint;
+    txt.style.color='var(--text)';
+    txt.style.fontStyle='normal';
+    txt.style.fontSize='12px';
+    // Animation flash amber
+    txt.style.transition='color .3s';
+    txt.style.color='var(--amber)';
+    setTimeout(()=>txt.style.color='var(--text)',600);
+  }else{
+    txt.textContent='Débloqué quand tout le monde buzze faux';
+    txt.style.color='var(--dim)';
+    txt.style.fontStyle='italic';
+    txt.style.fontSize='10px';
+  }
+}
+
+function renderSidebarScores(){
+  const el=document.getElementById('sidebar-scores');if(!el)return;
+  const sorted=Object.entries(gs.scores).sort((a,b)=>b[1]-a[1]);
+  el.innerHTML=sorted.map(([id,pts],i)=>{
+    const p=gs.players.find(pl=>pl.id===id)||{name:id,avatar:'?'};
+    const isMe=id===gs.myId;
+    const isWrong=_wrongBuzzers.has(id);
+    return`<div style="padding:10px 8px;border-bottom:1px solid var(--border);${isMe?'background:#0d0a00;':''};opacity:${isWrong?.35:1}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:18px">${p.avatar}</span>
+        <span style="font-size:12px;letter-spacing:1px;color:${isMe?'var(--amber)':'var(--text)'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:bold">${p.name}</span>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${isMe?'var(--amber)':'var(--text)'};letter-spacing:2px;line-height:1">${pts} <span style="font-size:12px;color:var(--dim);letter-spacing:1px">pts</span></div>
+      ${i===0?'<div style="font-size:9px;letter-spacing:2px;color:var(--amber);margin-top:3px">👑 LEADER</div>':''}
+    </div>`;
+  }).join('');
+}
+
+// ── BETWEEN ROUNDS ──
+function showBetweenScreen(d){
+  clearInterval(timerInterval);clearInterval(buzzCountdown);
+  showScreen('screen-between');
+
+  const movie=d.currentMovie;
+  document.getElementById('br-answer').textContent=(movie?.title||'?').toUpperCase();
+  document.getElementById('br-meta').textContent=
+    [movie?.originalTitle&&movie.originalTitle!==movie.title?movie.originalTitle:'',movie?.year].filter(Boolean).join(' · ');
+  document.getElementById('br-cat-badge').innerHTML=movie?.type==='movie'
+    ?'<span class="cat-badge cat-film">FILM</span>'
+    :'<span class="cat-badge cat-serie">SÉRIE</span>';
+  document.getElementById('br-img').src=movie?.poster||'';
+
+  // Winner info
+  if(d.roundWinner){
+    const name=d.winnerName||'?';
+    notif(`🎉 ${name} a trouvé ! +${d.winnerPts} pts`,'ok');
+  }else{
+    notif('⏱ Personne n\'a trouvé !');
+  }
+
+  // Scores
+  renderBetweenScores(d.scores||{},d.roundWinner);
+
+  // Host : bouton next / players : attente
+  const isLast=d.round>=d.totalRounds;
+  document.getElementById('br-next-btn').style.display=gs.isHost?'block':'none';
+  document.getElementById('br-next-btn').textContent=isLast?'🏆 VOIR LE CLASSEMENT':'▶ MANCHE SUIVANTE';
+  document.getElementById('br-wait').style.display=gs.isHost?'none':'flex';
+}
+
+function renderBetweenScores(scores,winnerId){
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('br-scores').innerHTML=sorted.map(([id,pts],i)=>{
+    const p=gs.players.find(pl=>pl.id===id)||{name:id,avatar:'?'};
+    const isMe=id===gs.myId;
+    const isWinner=id===winnerId;
+    return`<div class="score-row ${isWinner?'winner':''} ${isMe?'me':''}">
+      <div class="score-rank">${i+1}</div>
+      <div class="av">${p.avatar}</div>
+      <div class="score-name">${p.name}</div>
+      <div class="score-pts">${pts}</div>
+    </div>`;
+  }).join('');
+}
+
+window.nextRound=async function(){
+  if(!gs.isHost)return;
+  const d=await getDoc(doc(db,'pg_rooms',gs.roomCode));
+  const round=d.data()?.round||1;
+  if(round>=gs.totalRounds){
+    await updateDoc(doc(db,'pg_rooms',gs.roomCode),{phase:'final'});
+  }else{
+    await loadNextMovieAndUpdate(round+1);
+  }
+};
+
+// ── FINAL ──
+function showFinalScreen(d){
+  clearInterval(timerInterval);
+  showScreen('screen-final');
+  const scores=d.scores||{};
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+
+  // Podium top 3
+  const podiumOrder=[1,0,2]; // 2nd, 1st, 3rd visuellement
+  const barClasses=['podium-bar-2','podium-bar-1','podium-bar-3'];
+  const podiumEl=document.getElementById('final-podium');
+  podiumEl.innerHTML=podiumOrder.map((rank,vi)=>{
+    const entry=sorted[rank];
+    if(!entry)return'';
+    const [id,pts]=entry;
+    const p=gs.players.find(pl=>pl.id===id)||{name:id,avatar:'?'};
+    return`<div class="podium-col">
+      <div class="podium-bar ${barClasses[vi]}">
+        <div class="podium-num">${rank+1}</div>
+      </div>
+      <div style="font-size:22px">${p.avatar}</div>
+      <div class="podium-name">${p.name}</div>
+      <div class="podium-pts">${pts} pts</div>
+    </div>`;
+  }).join('');
+
+  // Full ranking
+  document.getElementById('final-scores').innerHTML=sorted.map(([id,pts],i)=>{
+    const p=gs.players.find(pl=>pl.id===id)||{name:id,avatar:'?'};
+    const isMe=id===gs.myId;
+    return`<div class="score-row ${isMe?'me':''}">
+      <div class="score-rank">${i+1}</div>
+      <div style="font-size:20px">${p.avatar}</div>
+      <div class="score-name">${p.name}</div>
+      <div class="score-pts">${pts} pts</div>
+    </div>`;
+  }).join('');
+}
+
+</script>
+</body>
+</html>
