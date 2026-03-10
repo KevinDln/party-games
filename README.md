@@ -31,6 +31,6 @@ Certains de ces mini jeux sont fortement inspirés des mini jeux réalisés par 
 | Jeu | Description |
 |-----|-------------|
 | 🎬 **Pixel Guess** | Identifiez le film ou la série depuis une affiche pixelisée |
-| 🧊 **Freeze** | Gelez sur une pose au signal — le plus drôle gagne |
-| 🎙 **VoiceMatch** | Imitez une voix, les autres tentent de vous identifier |
+| 🧊 **Freeze** | Gelez sur une pose au signal — le plus proche gagne |
+| 🎙 **imitation game** | Imitez une voix issue d'une vidéo, les autres voteront selon l'humour ou la ressemblance|
 | 🎭 **Dub Studio** | Doublez des scènes culte en direct avec bande rythmo |
